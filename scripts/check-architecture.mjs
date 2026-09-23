@@ -8,7 +8,10 @@ const requiredPaths = [
 	'src/app/container/container.context.ts',
 	'src/app/container/container.provider.tsx',
 	'src/app/container/container.ts',
+	'src/entities/.gitkeep',
+	'src/features/.gitkeep',
 	'src/shared/lib/react.ts',
+	'src/widgets/.gitkeep',
 ]
 
 await Promise.all(requiredPaths.map(path => access(resolve(root, path))))
