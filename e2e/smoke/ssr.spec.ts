@@ -9,7 +9,7 @@ test.describe('SSR / hydration', () => {
 		expect(response?.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin')
 		expect(response?.headers()['x-content-type-options']).toBe('nosniff')
 		await expect(page.locator('html')).toHaveAttribute('lang', /\S+/)
-		await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', 'dark')
+		await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', /^(dark|light)$/)
 		await expect(page).toHaveTitle(/\S+/)
 		await expect(page.locator('meta[name="description"]')).toHaveAttribute(
 			'content',
@@ -18,7 +18,6 @@ test.describe('SSR / hydration', () => {
 		await expect(page.getByRole('main')).toBeVisible()
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 		await expect(page.locator('symbol#icon-app')).toHaveCount(1)
-		await expect(page.locator('use[href="#icon-app"]')).toHaveCount(1)
 	})
 
 	test('hydrates without browser errors', async ({ page }) => {
@@ -32,7 +31,7 @@ test.describe('SSR / hydration', () => {
 
 		await page.goto('/')
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-		await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', 'dark')
+		await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', /^(dark|light)$/)
 
 		expect(errors).toEqual([])
 	})

@@ -23,9 +23,11 @@ if (!containerSource.includes('\'../../features/**/*.provider.ts\'')) {
 	throw new Error('DI container must discover feature provider modules.')
 }
 
-const uiFiles = (await listFiles(resolve(root, 'src/features')))
-	.filter(path => /\/ui\/.*\.[jt]sx?$/u.test(path))
-const forbiddenImport = /from\s+['"][^'"]*(?:\.injector|\.store|\/(?:data|repository|services)\/)[^'"]*['"]/u
+const sourceFiles = (await listFiles(resolve(root, 'src')))
+	.filter(path => /\.[jt]sx?$/u.test(path))
+const uiFiles = sourceFiles
+	.filter(path => /\/src\/features\/.*\/ui\/.*\.[jt]sx?$/u.test(path))
+const forbiddenImport = /from\s+['"][^'"]*(?:@\/app\/|\.injector|\.store|\/(?:data|repository|services)\/)[^'"]*['"]/u
 const violations = []
 
 for (const path of uiFiles) {
@@ -36,6 +38,17 @@ for (const path of uiFiles) {
 
 if (violations.length) {
 	throw new Error(`Feature UI imports orchestration internals:\n${violations.join('\n')}`)
+}
+
+const serviceLocatorViolations = []
+for (const path of sourceFiles.filter(path => !/\/src\/(?:app|pages)\//u.test(path))) {
+	if (/\buseService\b/u.test(await readFile(path, 'utf8'))) {
+		serviceLocatorViolations.push(path.replace(`${root}/`, ''))
+	}
+}
+
+if (serviceLocatorViolations.length) {
+	throw new Error(`useService is restricted to app/pages composition roots:\n${serviceLocatorViolations.join('\n')}`)
 }
 
 async function listFiles(directory) {

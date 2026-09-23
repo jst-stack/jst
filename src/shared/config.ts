@@ -1,7 +1,7 @@
 export const APP_CONFIG = {
 	colorScheme: 'dark',
-	description: 'A resettable React 19 starter with SSR, enforceable boundaries, typed data flow, DI, and production quality gates.',
+	description: 'An architecture-first React starter with SSR, explicit dependency boundaries, typed data flow, and production checks.',
 	language: 'en',
-	name: 'Frontend Starter',
-	primaryColor: 'lime',
+	name: 'JST',
+	primaryColor: 'blue',
 } as const

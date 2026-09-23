@@ -24,7 +24,7 @@ export default antfu(
 			html: true,
 			css: true,
 		},
-		ignores: ['.react-router/**', 'build/**', 'coverage/**', 'playwright-report/**', 'test-results/**'],
+		ignores: ['.react-router/**', 'build/**', 'coverage/**', 'playwright-report/**', 'showcase/**', 'test-results/**'],
 		rules: {
 			'no-console': ['error', { allow: ['log', 'error'] }],
 		},

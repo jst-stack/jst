@@ -7,7 +7,7 @@ export const forcedColorScheme = getForcedColorScheme(appColorScheme)
 
 export const theme = createTheme({
 	autoContrast: true,
-	defaultRadius: 'xs',
+	defaultRadius: 'sm',
 	fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 	headings: {
 		fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',

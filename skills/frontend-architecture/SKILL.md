@@ -20,6 +20,13 @@ Before JSX, identify the bounded context, domain state, invariants, use cases, a
 
 Static pages and trivial local controls do not need every layer. Stateful workflows must not collapse model, effects, orchestration, and rendering into one hook or component.
 
+## SOLID check
+
+- One owner per decision: routes compose, services orchestrate, stores expose view state, views render props.
+- Extend stable UI with composition and slots. Wrappers preserve native props, refs, semantics, and accessibility.
+- Keep contracts and dependency objects narrower than their implementations.
+- Domain policy owns ports; effectful adapters implement them at composition roots.
+
 ## Ownership
 
 - `pages` are composition roots for routes, metadata, widgets, features, and dependencies. Keep `route.tsx` thin.

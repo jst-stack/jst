@@ -1,86 +1,32 @@
 :root {
 	color-scheme: dark;
-
-	--color-bg: #090a08;
-	--color-bg-subtle: #0d0f0c;
-	--color-surface: #11130f;
-	--color-surface-hover: #171a14;
-	--color-border: #292d24;
-	--color-border-strong: #464c3b;
-	--color-text: #f1f3e9;
-	--color-text-muted: #a5aa9c;
-	--color-text-faint: #858a7e;
-	--color-accent: #c8f169;
-	--color-accent-muted: rgb(200 241 105 / 12%);
-	--color-success: #8fd8a1;
-	--font-mono: 'SFMono-Regular', consolas, 'Liberation Mono', monospace;
-	--motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
-
-	background: var(--color-bg);
 	font-synthesis: none;
-	text-rendering: optimizelegibility;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
 :root[data-mantine-color-scheme='light'] {
 	color-scheme: light;
-
-	--color-bg: #f4f5ef;
-	--color-bg-subtle: #eceee5;
-	--color-surface: #fff;
-	--color-surface-hover: #f7f8f2;
-	--color-border: #d7dbce;
-	--color-border-strong: #aeb5a3;
-	--color-text: #171a14;
-	--color-text-muted: #5d6357;
-	--color-text-faint: #6d7367;
-	--color-accent: #597600;
-	--color-accent-muted: rgb(89 118 0 / 10%);
-	--color-success: #287a42;
 }
 
 * {
 	box-sizing: border-box;
 }
 
+html {
+	scroll-behavior: smooth;
+}
+
 body {
 	margin: 0;
 	min-width: 320px;
 	min-height: 100vh;
-	background: var(--color-bg);
-	color: var(--color-text);
-}
-
-::selection {
-	background: var(--color-accent);
-	color: #0b0c09;
-}
-
-.mantine-Button-root {
-	position: relative;
-	overflow: hidden;
-	transition: 360ms var(--motion-ease);
-	transition-property: background-color, border-color, box-shadow, color, opacity, transform;
-}
-
-.mantine-Button-root:hover:not(:disabled) {
-	transform: translateY(-1px);
-	box-shadow: 0 6px 18px color-mix(in srgb, var(--color-accent) 12%, transparent);
-}
-
-.mantine-Button-root:active:not(:disabled) {
-	transform: translateY(0) scale(0.985);
-}
-
-.mantine-Button-root:is([data-variant='default'], [data-variant='subtle']):hover:not(:disabled) {
-	border-color: var(--color-accent);
-	background-color: var(--color-accent);
-	color: #0b0c09;
+	background: var(--mantine-color-body);
+	color: var(--mantine-color-text);
 }
 
 :focus-visible {
-	outline: 2px solid var(--color-accent);
+	outline: 2px solid var(--mantine-primary-color-filled);
 	outline-offset: 3px;
 }
 
