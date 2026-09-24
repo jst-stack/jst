@@ -1,4 +1,4 @@
-import { APP_CONFIG } from '@/shared/config'
+import { APP_CONFIG } from '@/shared/app.config'
 import { HomePage } from './home.page'
 
 export default function HomeRoute() {

@@ -78,4 +78,28 @@ Local presentation state stays local. Do not turn a component hook into a hidden
 - Use role-based browser locators and test observable behavior, not implementation details.
 - Run `npm run check` before review. It validates imports, feature UI isolation, style ownership, types, tests, production builds, and dead code.
 
-The executable rules live in ESLint, Stylelint, `scripts/check-architecture.mjs`, and `scripts/check-style-files.mjs`. The concise coding-agent contract lives in `skills/frontend-architecture/SKILL.md`.
+The executable rules come from [`@jst-stack/eslint-plugin`](https://github.com/jst-stack/eslint-plugin): its flat-config preset runs in editors and its `jst-lint` CLI validates cross-file architecture and stylesheet ownership. Stylelint handles CSS syntax. The concise coding-agent contract lives in `skills/frontend-architecture/SKILL.md`.
+
+## Enforced source contract
+
+These rules are errors in the editor through ESLint, in `npm run lint`, and at commit time:
+
+- Source files use `<lowerCamelName>.<role>.ts(x)`. React Router route/entry files and `vite-env.d.ts` are framework exceptions.
+- Browser and HTTP implementations use the `adapter` role; React Router reserves `*.client.*` for client-only modules.
+- Entity, feature, and widget code lives in `layer/<lowerCamelSlice>/...`; loose source files at layer roots are rejected.
+- Entity roles use `model`, `repository`, `services`, and `ui`. Feature roles use `model` and `ui`; widget presentation uses `ui`.
+- Components live in `ui`, transport adapters and DTOs in `repository`, services in `services`, and models, mappers, and builders in `model`.
+- `fetch`, `localStorage`, `sessionStorage`, and `indexedDB` are allowed only in entity repositories or shared infrastructure adapters.
+- UI directories cannot import stores, injectors, services, repositories, data adapters, or `app`.
+- Production source files are limited to 250 meaningful lines; functions to 80. Complexity is limited to 12, nesting to three levels, and parameters to four.
+- CSS owned by a component uses the identical `<owner>.module.css` basename. Global CSS is restricted to `src/index.css`.
+
+Create a compliant empty slice instead of assembling folders by hand:
+
+```bash
+npm run create:slice -- entity account
+npm run create:slice -- feature signIn
+npm run create:slice -- widget accountSummary
+```
+
+The limits are defaults, not permission to disable rules inline. If a real module cannot fit them, split responsibilities first; change a limit only through review with a concrete counterexample.

@@ -5,24 +5,25 @@
 	"private": true,
 	"packageManager": "npm@11.6.2",
 	"engines": {
-		"node": ">=24 <25"
+		"node": ">=22.22.2 <23"
 	},
 	"scripts": {
 		"dev": "react-router dev",
 		"typecheck": "react-router typegen && tsc -b --pretty false",
 		"build": "npm run typecheck && react-router build",
 		"start": "react-router-serve ./build/server/index.js",
-		"lint": "eslint . --cache --max-warnings 0 && npm run lint:styles && npm run lint:architecture",
-		"lint:architecture": "node scripts/check-architecture.mjs",
-		"lint:fix": "eslint . --cache --fix && npm run lint:styles:fix",
-		"lint:styles": "node scripts/check-style-files.mjs && stylelint \"src/**/*.css\"",
-		"lint:styles:fix": "stylelint \"src/**/*.css\" --fix && node scripts/check-style-files.mjs",
+		"lint": "eslint . --cache --cache-strategy content --max-warnings 0 && npm run lint:styles && npm run lint:architecture",
+		"lint:architecture": "jst-lint architecture",
+		"lint:fix": "eslint . --cache --cache-strategy content --fix && npm run lint:styles:fix",
+		"lint:styles": "jst-lint styles && stylelint \"src/**/*.css\"",
+		"lint:styles:fix": "stylelint \"src/**/*.css\" --fix && jst-lint styles",
 		"knip": "knip",
 		"test": "vitest",
 		"test:unit": "vitest run --passWithNoTests",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"check": "npm run lint && npm run test:unit && npm run build && npm run knip",
+		"create:slice": "node scripts/create-slice.mjs",
 		"template:setup": "node scripts/setup-template.mjs",
 		"prepare": "husky"
 	},
@@ -40,8 +41,8 @@
 	"devDependencies": {
 		"@antfu/eslint-config": "9.5.1",
 		"@axe-core/playwright": "^4.13.0",
-		"@boundaries/eslint-plugin": "^7.2.0",
 		"@eslint-react/eslint-plugin": "^5.19.0",
+		"@jst-stack/eslint-plugin": "github:jst-stack/eslint-plugin#0ed5312",
 		"@playwright/test": "^1.63.0",
 		"@react-router/dev": "^8.3.1",
 		"@react-router/fs-routes": "^8.3.1",
@@ -68,18 +69,18 @@
 	"knip": {
 		"ignore": [
 			"showcase/**",
-			"src/shared/lib/react.ts",
-			"src/shared/ui/SvgIcon.tsx"
+			"src/shared/lib/react.lib.ts",
+			"src/shared/ui/svgIcon.component.tsx"
 		]
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx}": [
-			"eslint --cache --fix",
+			"eslint --cache --cache-strategy content --fix",
 			"vitest related --run"
 		],
 		"*.{css,scss}": [
 			"stylelint --fix",
-			"node scripts/check-style-files.mjs"
+			"jst-lint styles"
 		],
 		"*.{json,html}": [
 			"eslint --fix"

@@ -1,4 +1,4 @@
-import type { KeyValueStorage, StorageOptions } from './types'
+import type { KeyValueStorage, StorageOptions } from './storage.types'
 
 export class LocalStoragePersister implements KeyValueStorage {
 	private prefix: string

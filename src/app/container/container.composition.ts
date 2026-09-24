@@ -1,4 +1,4 @@
-import type { ProviderModule } from './types'
+import type { ProviderModule } from './container.types'
 import { Container } from '@needle-di/core'
 
 const providerModules = import.meta.glob<ProviderModule>([

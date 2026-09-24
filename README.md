@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/jst-stack/jst/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jst-stack/jst/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/Node.js-24-5FA04E?style=flat-square" alt="Node.js 24">
+  <img src="https://img.shields.io/badge/Node.js-22.22-5FA04E?style=flat-square" alt="Node.js 22.22">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square" alt="React 19">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6F9CFF?style=flat-square" alt="MIT license"></a>
 </p>
@@ -57,6 +57,7 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 | `npm run test:e2e` | Run browser contracts and accessibility checks |
 | `npm run lint` | Check code, styles, and architecture boundaries |
 | `npm run check` | Run the complete local CI gate |
+| `npm run create:slice -- entity account` | Create a canonical entity, feature, or widget slice |
 | `npm run template:setup` | Configure the new product |
 
 ## Project policy

@@ -12,10 +12,10 @@ import {
 import svgSprite from 'virtual:svg-icons/sprite'
 import { AppProviders } from './app/app.component'
 import { BaseLayout } from './app/baseLayout.component'
-import { createAppContainer } from './app/container/container'
-import { appColorScheme, forcedColorScheme } from './app/theme'
+import { createAppContainer } from './app/container/container.composition'
+import { appColorScheme, forcedColorScheme } from './app/theme.config'
 import styles from './root.module.css'
-import { APP_CONFIG } from './shared/config'
+import { APP_CONFIG } from './shared/app.config'
 import '@mantine/core/styles.css'
 import './index.css'
 

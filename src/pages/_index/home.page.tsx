@@ -1,5 +1,5 @@
 import { Container, Title } from '@mantine/core'
-import { APP_CONFIG } from '@/shared/config'
+import { APP_CONFIG } from '@/shared/app.config'
 
 export function HomePage() {
 	return (

@@ -39,14 +39,14 @@ it('creates a configured clean product', async () => {
 		])
 
 		const packageJson = await readPackageJson(fixtureRoot)
-		const config = await readFile(resolve(fixtureRoot, 'src/shared/config.ts'), 'utf8')
+		const config = await readFile(resolve(fixtureRoot, 'src/shared/app.config.ts'), 'utf8')
 		const route = await readFile(resolve(fixtureRoot, 'src/pages/_index/route.tsx'), 'utf8')
 
 		expect(packageJson.name).toBe('field-notes')
 		expect(packageJson.scripts).not.toHaveProperty('template:setup')
 		expect(packageJson.dependencies).toHaveProperty('@needle-di/core')
-		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.ts')
-		expect(packageJson.knip?.ignore).toContain('src/shared/ui/SvgIcon.tsx')
+		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
+		expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
 		expect(config).toContain('description: \'Your team\\\'s private notes.\'')
 		expect(config).toContain('language: \'uk-UA\'')
 		expect(config).toContain('name: \'Field Notes\'')
@@ -56,7 +56,7 @@ it('creates a configured clean product', async () => {
 		expect(readme).toContain('skills/frontend-architecture/SKILL.md')
 		expect(await readFile(resolve(fixtureRoot, 'src/app/container/container.context.ts'), 'utf8'))
 			.toContain('export const useService')
-		expect(await readFile(resolve(fixtureRoot, 'src/shared/lib/react.ts'), 'utf8'))
+		expect(await readFile(resolve(fixtureRoot, 'src/shared/lib/react.lib.ts'), 'utf8'))
 			.toContain('export function createDi')
 		expect(route).toContain('import { HomePage } from \'./home.page\'')
 		expect(route).not.toContain('@mantine/core')
@@ -99,7 +99,8 @@ async function runSetup(fixtureRoot: string, args: string[]) {
 
 async function runArchitectureCheck(fixtureRoot: string) {
 	await execFileAsync(process.execPath, [
-		resolve(fixtureRoot, 'scripts/check-architecture.mjs'),
+		resolve(repositoryRoot, 'node_modules/@jst-stack/eslint-plugin/bin/jst-lint.mjs'),
+		'architecture',
 	], { cwd: fixtureRoot })
 }
 

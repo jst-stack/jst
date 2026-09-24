@@ -137,7 +137,7 @@ async function setupProject(options) {
 
 async function writeAppConfig(options) {
 	await writeFile(
-		resolve(root, 'src/shared/config.ts'),
+		resolve(root, 'src/shared/app.config.ts'),
 		`export const APP_CONFIG = {
 \tcolorScheme: ${toTsString(options.colorScheme)},
 \tdescription: ${toTsString(options.description)},
@@ -155,7 +155,7 @@ async function updatePackageJson(options) {
 
 	packageJson.name = options.name
 	delete packageJson.scripts['template:setup']
-	packageJson.knip = { ignore: ['src/shared/lib/react.ts', 'src/shared/ui/SvgIcon.tsx'] }
+	packageJson.knip = { ignore: ['src/shared/lib/react.lib.ts', 'src/shared/ui/svgIcon.component.tsx'] }
 
 	await writeJson(packageJsonPath, packageJson)
 }
@@ -193,6 +193,8 @@ npm run dev
 ## Architecture
 
 Routes are discovered from \`src/pages\`. Follow \`skills/frontend-architecture/SKILL.md\` when adding a vertical slice or reviewing dependency boundaries.
+
+Create a compliant slice with \`npm run create:slice -- <entity|feature|widget> <lowerCamelName>\`.
 `,
 	)
 }

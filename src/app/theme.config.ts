@@ -1,6 +1,6 @@
 import type { MantineColorScheme } from '@mantine/core'
 import { createTheme } from '@mantine/core'
-import { APP_CONFIG } from '@/shared/config'
+import { APP_CONFIG } from '@/shared/app.config'
 
 export const appColorScheme: MantineColorScheme = APP_CONFIG.colorScheme
 export const forcedColorScheme = getForcedColorScheme(appColorScheme)

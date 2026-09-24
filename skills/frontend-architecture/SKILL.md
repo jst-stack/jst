@@ -55,7 +55,7 @@ Strict FSD cross-slice isolation is optional when it adds indirection without re
 
 ## Preserve the kernel
 
-Removing the demo means deleting demo slices, not `src/app/container`, `src/shared/lib/react.ts`, provider discovery, this skill, or architecture checks. Clean setup may remove Reatom when no stateful slice remains; add it back before implementing a non-trivial stateful workflow instead of replacing the view model with a large React hook.
+Removing the demo means deleting demo slices, not `src/app/container`, `src/shared/lib/react.lib.ts`, provider discovery, this skill, or architecture checks. Clean setup may remove Reatom when no stateful slice remains; add it back before implementing a non-trivial stateful workflow instead of replacing the view model with a large React hook.
 
 ## Styling
 
@@ -69,3 +69,5 @@ Removing the demo means deleting demo slices, not `src/app/container`, `src/shar
 ## Delivery check
 
 Keep transport failure and empty/loading states explicit. Test services/stores with substituted ports and user flows with role-based Playwright locators. Run `npm run check`; it verifies layer rules, UI isolation, and the architecture kernel. Add abstractions only when the current slice proves they are needed.
+
+Create slices with `npm run create:slice -- <entity|feature|widget> <lowerCamelName>`. Source files follow `<lowerCamelName>.<role>.ts(x)` and the role directories enforced by ESLint. Do not disable architecture, naming, effect-boundary, complexity, or size rules inline; split the responsibility or move it to the reported boundary.
