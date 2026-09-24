@@ -10,6 +10,7 @@ const execFileAsync = promisify(execFile)
 const repositoryRoot = resolve(import.meta.dirname, '../..')
 const excludedDirectories = new Set([
 	'.git',
+	'.eslintcache',
 	'.react-router',
 	'build',
 	'node_modules',
@@ -54,7 +55,7 @@ it('creates a configured clean product', async () => {
 		const readme = await readFile(resolve(fixtureRoot, 'README.md'), 'utf8')
 		expect(readme).toContain('npm run check')
 		expect(readme).toContain('skills/frontend-architecture/SKILL.md')
-		expect(await readFile(resolve(fixtureRoot, 'src/app/container/container.context.ts'), 'utf8'))
+		expect(await readFile(resolve(fixtureRoot, 'src/shared/di/serviceLocator.context.ts'), 'utf8'))
 			.toContain('export const useService')
 		expect(await readFile(resolve(fixtureRoot, 'src/shared/lib/react.lib.ts'), 'utf8'))
 			.toContain('export function createDi')

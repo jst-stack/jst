@@ -43,7 +43,7 @@ Directly import stable lower-layer code: types, pure models, mappers, and compon
 
 A feature entry may consume its injector and Reatom store. Files under `features/*/ui` must not import injectors, stores, services, repositories, or data adapters. Pass state and callbacks as props so views are independently testable and replaceable. A feature that needs page-owned state receives the minimum dependency object through its injector; it must not import `app`.
 
-Strict FSD cross-slice isolation is optional when it adds indirection without reducing coupling. A direct same-layer import is acceptable while ownership is clear, there is no cycle, and the code has one consumer. Extract a feature/shared contract when reuse, independent change, or test substitution becomes real.
+The default policy forbids direct imports between sibling production slices. Compose them in a higher layer or inject a narrow consumer-owned port. If a product has a proven counterexample, change the centralized `jst.createConfig` policy through review instead of scattering disable comments.
 
 ## Pattern choice
 

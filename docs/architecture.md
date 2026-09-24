@@ -15,7 +15,7 @@ app → pages → widgets → features → entities → shared
 - `entities` own domain types, models, mappers, repositories, services, stores, and entity UI.
 - `shared` owns product-agnostic infrastructure. Move code here only after a second real consumer.
 
-Dependencies normally point downward. A direct same-layer import is acceptable while ownership is clear, no cycle exists, and the code has one consumer. Extract a contract when reuse, independent evolution, or test substitution becomes real.
+Dependencies point downward. Production slices cannot import sibling slices directly; compose them from a higher layer or inject a narrow consumer-owned port. Tests may reach composition roots.
 
 ## A complete vertical slice
 
@@ -79,6 +79,8 @@ Local presentation state stays local. Do not turn a component hook into a hidden
 - Run `npm run check` before review. It validates imports, feature UI isolation, style ownership, types, tests, production builds, and dead code.
 
 The executable rules come from [`@jst-stack/eslint-plugin`](https://github.com/jst-stack/eslint-plugin): its flat-config preset runs in editors and its `jst-lint` CLI validates cross-file architecture and stylesheet ownership. Stylelint handles CSS syntax. The concise coding-agent contract lives in `skills/frontend-architecture/SKILL.md`.
+
+The standard is strict but replaceable. Use `jst.createConfig({ files: { testSuffixes: ['spec'] } })` in `eslint.config.js` to override a deliberate convention without editing or forking rule code. The same policy API exposes focused `files`, `imports`, `effects`, `ui`, and `limits` overrides; unspecified values retain JST defaults.
 
 ## Enforced source contract
 
