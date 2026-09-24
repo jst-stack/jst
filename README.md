@@ -35,7 +35,7 @@ The full architecture walkthrough and working API/persistence flows live in the 
 - TypeScript, Vite, and filesystem route discovery
 - Dependency injection with request-scoped composition and auto-discovered providers
 - A documented path for repository, DTO validation, mapper, service, view-model, entry, and props-driven view boundaries
-- CSS Modules, Stylelint, SVG sprites, Vitest, Playwright, Axe, ESLint boundaries, Knip, Husky, and lint-staged
+- CSS Modules, Stylelint, SVG sprites, Vitest, Playwright, Axe, ESLint boundaries, React Doctor, Knip, Husky, and lint-staged
 
 ## Architecture
 
@@ -56,6 +56,7 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 | `npm run test:unit` | Run unit and integration tests once |
 | `npm run test:e2e` | Run browser contracts and accessibility checks |
 | `npm run lint` | Check code, styles, and architecture boundaries |
+| `npm run doctor` | Diagnose React correctness and maintainability issues |
 | `npm run check` | Run the complete local CI gate |
 | `npm run create:slice -- entity account` | Create a canonical entity, feature, or widget slice |
 | `npm run template:setup` | Configure the new product |

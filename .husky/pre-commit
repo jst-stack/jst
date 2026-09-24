@@ -1,2 +1,3 @@
 npm run lint:architecture
+npm run doctor:staged
 npx lint-staged

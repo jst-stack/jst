@@ -45,6 +45,9 @@ it('creates a configured clean product', async () => {
 
 		expect(packageJson.name).toBe('field-notes')
 		expect(packageJson.scripts).not.toHaveProperty('template:setup')
+		expect(packageJson.scripts.doctor).toContain('react-doctor')
+		expect(await readFile(resolve(fixtureRoot, '.husky/pre-commit'), 'utf8'))
+			.toContain('npm run doctor:staged')
 		expect(packageJson.dependencies).toHaveProperty('@needle-di/core')
 		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
 		expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
