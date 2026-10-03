@@ -138,8 +138,8 @@ The ecosystem consists of four independent repositories:
 - [x] Add CI to `create-jst` and eslint-plugin with supported Node/ESLint/OS matrices.
 - [x] Add changelogs, release-note templates, and compatibility documentation.
 - [ ] Create immutable template tags as part of the authorized release.
-- [ ] Publish `@jst-stack/eslint-plugin` through trusted publishing with provenance.
-- [ ] Replace Git commit dependencies with compatible npm ranges.
+- [x] Publish `@jst-stack/eslint-plugin`; the first release bootstrapped the new npm scope locally and tag workflows own subsequent provenance-backed releases.
+- [x] Replace Git commit dependencies with compatible npm ranges.
 - [x] Add cross-repository released-artifact canary.
 
 ### Phase 2 — policy and enforcement correctness
@@ -184,7 +184,7 @@ The ecosystem consists of four independent repositories:
 
 ### Phase 6 — showcase, documentation, and release proof
 
-- [ ] Migrate showcase to the released plugin and the same mandatory gates as JST.
+- [x] Migrate showcase to the released plugin and the same mandatory gates as JST.
 - [x] Demonstrate public APIs, Zod DTO validation, fetch adapter, DI, Reatom, Testing Library, MSW, and full browser states.
 - [x] Keep API browser tests deterministic while retaining a visible real JSONPlaceholder flow.
 - [x] Document compatibility, rule reference, migration, deployment, troubleshooting, and release process.
@@ -261,8 +261,8 @@ Verification completed at this checkpoint:
 
 Still in progress at this checkpoint:
 
-- Publish the policy package before replacing JST/showcase Git dependencies with npm ranges; no publish, commit, or push was performed.
-- Make template generators consume the published normalized policy rather than compatibility fallbacks, then activate `jst-lint budgets` in generated applications.
+- The policy package is published as `@jst-stack/eslint-plugin@0.3.1`; JST and showcase consume `^0.3.1`, use typed `defineConfig`, and enforce `jst-lint budgets` after production builds.
+- Make the slice generator consume the published normalized policy rather than its remaining compatibility defaults.
 - Run released-artifact npm/pnpm canaries on Linux/macOS/Windows after the 0.4.0 template and CLI tags exist.
 - Complete the final cross-platform/release audit; CLI project-creation and plugin lint baselines are already stored and passing locally.
 - Verify the Docker image with an actual container build and health probe; the local Docker daemon was unavailable, while the CI health job is configured.
@@ -270,7 +270,7 @@ Still in progress at this checkpoint:
 Current release blockers:
 
 - P0: none.
-- P1: three release-sequencing items — publish the policy package, create immutable compatible tags/releases, and switch JST/showcase from Git dependencies to the released npm range.
+- P1: two release-sequencing items — create the immutable compatible template/CLI releases and complete their released-artifact cross-platform canary.
 
 Every implementation handoff must end with a concise current-state summary containing:
 

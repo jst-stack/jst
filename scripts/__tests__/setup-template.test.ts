@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { access, cp, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { access, cp, mkdtemp, readFile, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
@@ -69,9 +69,9 @@ it('creates a configured clean product', async () => {
 		expect(await readFile(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'), 'utf8'))
 			.toContain('<Container size="lg">')
 		await expect(access(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/entities/.gitkeep'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/features/.gitkeep'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/widgets/.gitkeep'))).resolves.toBeUndefined()
+		await expect(access(resolve(fixtureRoot, 'src/entities/README.md'))).resolves.toBeUndefined()
+		await expect(access(resolve(fixtureRoot, 'src/features/README.md'))).resolves.toBeUndefined()
+		await expect(access(resolve(fixtureRoot, 'src/widgets/README.md'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, 'skills/frontend-architecture/SKILL.md'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, 'jst.compatibility.json'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, '.gitmodules'))).rejects.toThrow()
@@ -99,6 +99,7 @@ it('configures SCSS Modules consistently', async () => {
 		expect(packageJson.devDependencies).not.toHaveProperty('postcss-scss')
 		expect(packageJson.devDependencies).not.toHaveProperty('stylelint-config-standard')
 		expect(Object.keys(packageJson.devDependencies)).toEqual(Object.keys(packageJson.devDependencies).toSorted())
+		expect(policy).toContain('import { defineConfig } from \'@jst-stack/eslint-plugin\'')
 		expect(policy).toContain('moduleExtension: \'scss\'')
 		expect(stylelint).toContain('extends: [\'stylelint-config-standard-scss\']')
 		await expect(access(resolve(fixtureRoot, 'src/root.module.scss'))).resolves.toBeUndefined()
@@ -120,6 +121,7 @@ async function createFixture(name: string) {
 		recursive: true,
 		filter: source => !excludedDirectories.has(relative(repositoryRoot, source).split(sep)[0]),
 	})
+	await symlink(resolve(repositoryRoot, 'node_modules'), resolve(fixtureRoot, 'node_modules'), 'dir')
 
 	return { fixtureRoot, temporaryRoot }
 }

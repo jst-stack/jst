@@ -177,7 +177,7 @@ async function updatePackageJson(options) {
 }
 
 async function configureStyles(style) {
-	await writeFile(resolve(root, 'jst.config.ts'), `export default {\n\tstyles: {\n\t\tmoduleExtension: '${style}',\n\t},\n} as const\n`)
+	await writeFile(resolve(root, 'jst.config.ts'), `import { defineConfig } from '@jst-stack/eslint-plugin'\n\nexport default defineConfig({\n\tstyles: {\n\t\tmoduleExtension: '${style}',\n\t},\n})\n`)
 	if (style === 'css') {
 		return
 	}
