@@ -88,12 +88,30 @@ it('rolls back source and manifests when dependency installation fails', async (
 it('uses SCSS policy and reports exact dry-run output without writing', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-scss-'))
 	try {
-		await writeFile(resolve(root, 'jst.config.ts'), 'export default { styles: { moduleExtension: \'scss\' } } as const\n')
+		await symlink(resolve(repositoryRoot, 'node_modules'), resolve(root, 'node_modules'), 'dir')
+		await writeFile(resolve(root, 'jst.config.ts'), `import { defineConfig } from '@jst-stack/eslint-plugin'
+
+export default defineConfig({
+	files: { roleDirectories: { component: 'views' }, testSuffixes: ['spec'] },
+	generator: { layers: { widget: 'blocks' }, testDirectory: 'tests' },
+	imports: {
+		alias: '~/',
+		layers: { blocks: ['blocks', 'features', 'entities', 'shared'] },
+		slicedLayers: ['pages', 'blocks', 'features', 'entities'],
+	},
+	styles: { moduleExtension: 'scss' },
+})
+`)
 		const { stdout } = await execute(process.execPath, [script, 'widget', 'accountMenu', '--dry-run', '--tests'], { cwd: root })
-		expect(stdout).toContain('ui/accountMenu.component.module.scss')
+		expect(stdout).toContain('views/accountMenu.component.module.scss')
+		expect(stdout).toContain('tests/accountMenu.spec.tsx')
 		expect(stdout).toContain('@testing-library/react')
 		expect(stdout).toContain('sass')
-		await expect(access(resolve(root, 'src/widgets/accountMenu'))).rejects.toThrow()
+		await expect(access(resolve(root, 'src/blocks/accountMenu'))).rejects.toThrow()
+
+		await execute(process.execPath, [script, 'entity', 'auditLog', '--repository', '--tests', '--no-install'], { cwd: root })
+		await expect(access(resolve(root, 'src/entities/auditLog/tests/auditLog.spec.ts'))).resolves.toBeUndefined()
+		expect(await readFile(resolve(root, 'src/entities/auditLog/repository/auditLog.adapter.ts'), 'utf8')).toContain('from \'~/shared/http/httpClient.types\'')
 	}
 	finally {
 		await rm(root, { force: true, recursive: true })

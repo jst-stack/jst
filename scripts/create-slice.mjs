@@ -6,7 +6,6 @@ import { createInterface } from 'node:readline/promises'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
-const layers = { entity: 'entities', feature: 'features', widget: 'widgets' }
 const command = parseArgs({
 	allowNegative: true,
 	allowPositionals: true,
@@ -32,10 +31,11 @@ const [kind, name] = command.positionals
 validateInput(kind, name, command.positionals, command.values)
 const values = await resolveValues(kind, command.values)
 const root = process.cwd()
-const layer = layers[kind]
+const policy = await readPolicy(root)
+const layer = policy.generator.layers[kind]
 const target = resolve(root, 'src', layer, name)
-const style = values.style ?? await readStyle(root)
-const plan = createPlan({ kind, name, style, values })
+const style = values.style ?? policy.styles.moduleExtension
+const plan = createPlan({ kind, name, policy, style, values })
 
 await assertMissing(target)
 if (values['dry-run']) {
@@ -97,28 +97,32 @@ async function confirm(prompts, label, fallback = false) {
 	return answer ? ['y', 'yes'].includes(answer) : fallback
 }
 
-function createPlan({ kind, name, style, values }) {
+function createPlan({ kind, name, policy, style, values }) {
 	const typeName = toPascalCase(name)
+	const publicApiSuffix = policy.imports.publicApiSuffix
+	const testDirectory = policy.generator.testDirectory
+	const testSuffix = policy.files.testSuffixes[0]
+	const uiDirectory = policy.files.roleDirectories.component
 	const files = new Map()
 	const dependencies = new Set()
 	const devDependencies = new Set()
 	if (kind === 'entity') {
 		files.set(`model/${name}.model.ts`, createModel(typeName))
-		files.set(`${name}.public.ts`, createEntityPublicApi(typeName, name, values.repository))
+		files.set(`${name}${publicApiSuffix}.ts`, createEntityPublicApi(typeName, name, values.repository))
 	}
 	if (kind === 'feature') {
-		files.set(`${name}.entry.tsx`, `import { ${typeName}View } from './ui/${name}.component'\n\nexport function ${typeName}Entry() {\n\treturn <${typeName}View />\n}\n`)
+		files.set(`${name}.entry.tsx`, `import { ${typeName}View } from './${uiDirectory}/${name}.component'\n\nexport function ${typeName}Entry() {\n\treturn <${typeName}View />\n}\n`)
 	}
 	if (kind === 'widget') {
-		files.set(`${name}.public.ts`, `export { ${typeName} } from './ui/${name}.component'\n`)
+		files.set(`${name}${publicApiSuffix}.ts`, `export { ${typeName} } from './${uiDirectory}/${name}.component'\n`)
 	}
 	if (kind === 'feature' && values.public) {
-		files.set(`${name}.public.ts`, `export { ${typeName}Entry } from './${name}.entry'\n`)
+		files.set(`${name}${publicApiSuffix}.ts`, `export { ${typeName}Entry } from './${name}.entry'\n`)
 	}
 	if (values.ui || kind !== 'entity') {
 		const componentName = kind === 'feature' ? `${typeName}View` : typeName
-		files.set(`ui/${name}.component.tsx`, createComponent(componentName, name, style))
-		files.set(`ui/${name}.component.module.${style}`, `.root {\n\tdisplay: block;\n}\n`)
+		files.set(`${uiDirectory}/${name}.component.tsx`, createComponent(componentName, name, style))
+		files.set(`${uiDirectory}/${name}.component.module.${style}`, `.root {\n\tdisplay: block;\n}\n`)
 	}
 	if (values.repository) {
 		assertEntityOption(kind, '--repository')
@@ -126,7 +130,7 @@ function createPlan({ kind, name, style, values }) {
 		files.set(`repository/${name}.dto.ts`, createDto(typeName, name))
 		files.set(`repository/${name}.repository.ts`, createRepository(typeName, name))
 		files.set(`model/${name}.mapper.ts`, createMapper(typeName, name))
-		files.set(`repository/${name}.adapter.ts`, createFetchAdapter(typeName, name))
+		files.set(`repository/${name}.adapter.ts`, createFetchAdapter(typeName, name, policy.imports.alias))
 		files.set(`${name}.provider.ts`, createProvider(typeName, name))
 	}
 	if (values.service) {
@@ -152,7 +156,7 @@ function createPlan({ kind, name, style, values }) {
 	if (values.tests) {
 		const testsUi = values.ui || kind !== 'entity'
 		const extension = testsUi ? 'tsx' : 'ts'
-		files.set(`__tests__/${name}.test.${extension}`, createTest(kind, typeName, name, values.repository, testsUi))
+		files.set(`${testDirectory}/${name}.${testSuffix}.${extension}`, createTest(kind, typeName, name, values.repository, testsUi, uiDirectory))
 		if (testsUi) {
 			devDependencies.add('@testing-library/react')
 			devDependencies.add('jsdom')
@@ -188,8 +192,8 @@ function createMapper(typeName, name) {
 	return `import type { ${typeName}Dto } from '../repository/${name}.dto'\nimport type { ${typeName} } from './${name}.model'\nimport { create${typeName} } from './${name}.model'\n\nexport function map${typeName}Dto(dto: ${typeName}Dto): ${typeName} {\n\treturn create${typeName}({ id: dto.id })\n}\n`
 }
 
-function createFetchAdapter(typeName, name) {
-	return `import type { HttpClient } from '@/shared/http/httpClient.types'\nimport type { ${typeName}Repository } from './${name}.repository'\nimport { inject } from '@needle-di/core'\nimport { HTTP_CLIENT_TOKEN } from '@/shared/http/httpClient.types'\nimport { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from './${name}.dto'\n\nexport class ${typeName}FetchAdapter implements ${typeName}Repository {\n\tconstructor(private readonly httpClient: HttpClient = inject(HTTP_CLIENT_TOKEN)) {}\n\n\tasync findById(id: string) {\n\t\tconst dto = ${name}DtoSchema.parse(await this.httpClient.request(\`/${name}/\${id}\`))\n\t\treturn map${typeName}Dto(dto)\n\t}\n}\n`
+function createFetchAdapter(typeName, name, alias) {
+	return `import type { HttpClient } from '${alias}shared/http/httpClient.types'\nimport type { ${typeName}Repository } from './${name}.repository'\nimport { inject } from '@needle-di/core'\nimport { HTTP_CLIENT_TOKEN } from '${alias}shared/http/httpClient.types'\nimport { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from './${name}.dto'\n\nexport class ${typeName}FetchAdapter implements ${typeName}Repository {\n\tconstructor(private readonly httpClient: HttpClient = inject(HTTP_CLIENT_TOKEN)) {}\n\n\tasync findById(id: string) {\n\t\tconst dto = ${name}DtoSchema.parse(await this.httpClient.request(\`/${name}/\${id}\`))\n\t\treturn map${typeName}Dto(dto)\n\t}\n}\n`
 }
 
 function createProvider(typeName, name) {
@@ -200,26 +204,32 @@ function createMswHandler(name) {
 	return `import { http, HttpResponse } from 'msw'\n\nexport const ${name}Handlers = [\n\thttp.get('*/${name}/:id', ({ params }) => HttpResponse.json({ id: params.id })),\n]\n`
 }
 
-function createTest(kind, typeName, name, hasRepository, testsUi) {
+function createTest(kind, typeName, name, hasRepository, testsUi, uiDirectory) {
 	if (kind === 'entity' && hasRepository) {
-		const uiImports = testsUi ? `import { render, screen } from '@testing-library/react'\nimport { ${typeName} } from '../ui/${name}.component'\n` : ''
+		const uiImports = testsUi ? `import { render, screen } from '@testing-library/react'\nimport { ${typeName} } from '../${uiDirectory}/${name}.component'\n` : ''
 		const uiTest = testsUi ? `\n\tit('renders the props-driven entity view', () => {\n\t\trender(<${typeName} />)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n` : ''
 		return `${testsUi ? '// @vitest-environment jsdom\n\n' : ''}${uiImports}import { describe, expect, it } from 'vitest'\nimport { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from '../repository/${name}.dto'\n\ndescribe('${name} boundary', () => {\n\tit('validates and maps an external DTO', () => {\n\t\tconst dto = ${name}DtoSchema.parse({ id: 'example' })\n\t\texpect(map${typeName}Dto(dto)).toEqual({ id: 'example' })\n\t})\n\n\tit('rejects an invalid external DTO', () => {\n\t\texpect(() => ${name}DtoSchema.parse({ id: 1 })).toThrow()\n\t})\n${uiTest}})\n`
 	}
 	if (kind === 'entity') {
 		return `import { describe, expect, it } from 'vitest'\nimport { create${typeName} } from '../model/${name}.model'\n\ndescribe('${name} model', () => {\n\tit('creates an independent domain value', () => {\n\t\tconst source = { id: 'example' }\n\t\tconst model = create${typeName}(source)\n\t\texpect(model).toEqual(source)\n\t\texpect(model).not.toBe(source)\n\t})\n})\n`
 	}
-	return `// @vitest-environment jsdom\n\nimport { render, screen } from '@testing-library/react'\nimport { describe, expect, it } from 'vitest'\nimport { ${typeName}${kind === 'feature' ? 'Entry' : ''} } from '../${kind === 'feature' ? `${name}.entry` : `ui/${name}.component`}'\n\ndescribe('${name} ${kind}', () => {\n\tit('renders its accessible composition boundary', () => {\n\t\trender(<${typeName}${kind === 'feature' ? 'Entry' : ''} />)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n})\n`
+	return `// @vitest-environment jsdom\n\nimport { render, screen } from '@testing-library/react'\nimport { describe, expect, it } from 'vitest'\nimport { ${typeName}${kind === 'feature' ? 'Entry' : ''} } from '../${kind === 'feature' ? `${name}.entry` : `${uiDirectory}/${name}.component`}'\n\ndescribe('${name} ${kind}', () => {\n\tit('renders its accessible composition boundary', () => {\n\t\trender(<${typeName}${kind === 'feature' ? 'Entry' : ''} />)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n})\n`
 }
 
-async function readStyle(root) {
+async function readPolicy(root) {
+	const { defineConfig } = await import('@jst-stack/eslint-plugin')
+	const path = resolve(root, 'jst.config.ts')
 	try {
-		const config = await import(pathToFileURL(resolve(root, 'jst.config.ts')).href)
-		return config.default.styles.moduleExtension
+		await access(path)
 	}
-	catch {
-		return 'css'
+	catch (error) {
+		if (error?.code === 'ENOENT') {
+			return defineConfig()
+		}
+		throw error
 	}
+	const config = await import(pathToFileURL(path).href)
+	return defineConfig(config.default)
 }
 
 async function installDependencies(root, plan) {
@@ -275,7 +285,7 @@ async function assertMissing(path) {
 }
 
 function validateInput(kind, name, positionals, values) {
-	if (!layers[kind] || !name || positionals.length !== 2) {
+	if (!['entity', 'feature', 'widget'].includes(kind) || !name || positionals.length !== 2) {
 		fail('Usage: npm run create:slice -- <entity|feature|widget> <lowerCamelName> [options]')
 	}
 	if (!/^[a-z][A-Za-z0-9]*$/u.test(name)) {

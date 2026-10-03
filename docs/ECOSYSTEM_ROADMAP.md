@@ -137,7 +137,7 @@ The ecosystem consists of four independent repositories:
 - [x] Remove Yarn/Bun claims and add real npm/pnpm generation tests.
 - [x] Add CI to `create-jst` and eslint-plugin with supported Node/ESLint/OS matrices.
 - [x] Add changelogs, release-note templates, and compatibility documentation.
-- [ ] Create immutable template tags as part of the authorized release.
+- [x] Create immutable template tags as part of the authorized release.
 - [x] Publish `@jst-stack/eslint-plugin`; the first release bootstrapped the new npm scope locally and tag workflows own subsequent provenance-backed releases.
 - [x] Replace Git commit dependencies with compatible npm ranges.
 - [x] Add cross-repository released-artifact canary.
@@ -146,7 +146,7 @@ The ecosystem consists of four independent repositories:
 
 - [x] Introduce typed `jst.config.ts` and one normalized/deeply immutable policy.
 - [x] Make ESLint rules and every policy-package CLI check consume it.
-- [ ] Remove hard-coded test suffixes, aliases, layers, style extensions, provider globs, and UI paths outside defaults.
+- [x] Remove hard-coded test suffixes, aliases, layers, style extensions, provider globs, and UI paths outside defaults.
 - [x] Replace duplicate regex enforcement with AST/resolver-backed checks.
 - [x] Close import forms, shadowing, prefix matching, Windows path, and boolean/calculation false positives.
 - [x] Enforce explicit slice public APIs and detect circular dependencies.
@@ -261,8 +261,8 @@ Verification completed at this checkpoint:
 
 Still in progress at this checkpoint:
 
-- The policy package is published as `@jst-stack/eslint-plugin@0.3.1`; JST and showcase consume `^0.3.1`, use typed `defineConfig`, and enforce `jst-lint budgets` after production builds.
-- Make the slice generator consume the published normalized policy rather than its remaining compatibility defaults.
+- The policy package is published as `@jst-stack/eslint-plugin@0.3.2`; JST and showcase consume `^0.3.2`, use typed `defineConfig`, and enforce `jst-lint budgets` after production builds.
+- The slice generator consumes normalized policy for layers, alias, test convention, public API suffix, style extension, and UI/test directories; the override path is covered by integration tests.
 - Run released-artifact npm/pnpm canaries on Linux/macOS/Windows after the 0.4.0 template and CLI tags exist.
 - Complete the final cross-platform/release audit; CLI project-creation and plugin lint baselines are already stored and passing locally.
 - Verify the Docker image with an actual container build and health probe; the local Docker daemon was unavailable, while the CI health job is configured.
@@ -270,7 +270,7 @@ Still in progress at this checkpoint:
 Current release blockers:
 
 - P0: none.
-- P1: two release-sequencing items — create the immutable compatible template/CLI releases and complete their released-artifact cross-platform canary.
+- P1: one release-sequencing item — complete the released-artifact npm/pnpm cross-platform canary.
 
 Every implementation handoff must end with a concise current-state summary containing:
 
