@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/jst-stack/jst/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jst-stack/jst/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/Node.js-22.22-5FA04E?style=flat-square" alt="Node.js 22.22">
+  <img src="https://img.shields.io/badge/Node.js-24_LTS-5FA04E?style=flat-square" alt="Node.js 24 LTS">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square" alt="React 19">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6F9CFF?style=flat-square" alt="MIT license"></a>
 </p>
@@ -25,9 +25,13 @@ npm run dev
 
 The initializer configures the project, installs dependencies, and starts from the clean application shell.
 
+JST requires Node.js 24 LTS and supports npm and pnpm. Released CLI, template, and architecture-plugin combinations are recorded in [`jst.compatibility.json`](jst.compatibility.json); project migrations use the same manifest instead of guessing from dependency versions.
+
 ## Showcase
 
 The full architecture walkthrough and working API/persistence flows live in the independent [JST Showcase](https://github.com/jst-stack/jst-showcase), pinned here as the `showcase` Git submodule. Generated applications do not include it.
+
+Create the reference application deliberately with `npm create jst@latest my-demo -- --example showcase`.
 
 ## Included
 
@@ -63,6 +67,11 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 
 ## Project policy
 
+- [Compatibility](docs/compatibility.md)
+- [Migrations](docs/migrations.md)
+- [Production and deployment](docs/deployment.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Release process](docs/releasing.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [MIT License](LICENSE)

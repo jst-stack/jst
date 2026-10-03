@@ -5,7 +5,7 @@
 	"private": true,
 	"packageManager": "npm@11.6.2",
 	"engines": {
-		"node": ">=22.22.2 <23"
+		"node": ">=24.15.0 <25"
 	},
 	"scripts": {
 		"dev": "react-router dev",
@@ -15,8 +15,8 @@
 		"lint": "eslint . --cache --cache-strategy content --max-warnings 0 && npm run lint:styles && npm run lint:architecture",
 		"lint:architecture": "jst-lint architecture",
 		"lint:fix": "eslint . --cache --cache-strategy content --fix && npm run lint:styles:fix",
-		"lint:styles": "jst-lint styles && stylelint \"src/**/*.css\"",
-		"lint:styles:fix": "stylelint \"src/**/*.css\" --fix && jst-lint styles",
+		"lint:styles": "jst-lint styles && stylelint \"src/**/*.{css,scss}\"",
+		"lint:styles:fix": "stylelint \"src/**/*.{css,scss}\" --fix && jst-lint styles",
 		"doctor": "react-doctor . --blocking warning --no-supply-chain --no-telemetry --yes",
 		"doctor:staged": "react-doctor --staged --blocking warning --no-supply-chain --no-telemetry --yes",
 		"knip": "knip",

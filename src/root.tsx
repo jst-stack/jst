@@ -19,12 +19,6 @@ import { APP_CONFIG } from './shared/app.config'
 import '@mantine/core/styles.css'
 import './index.css'
 
-export const headers: Route.HeadersFunction = () => ({
-	'Referrer-Policy': 'strict-origin-when-cross-origin',
-	'X-Content-Type-Options': 'nosniff',
-	'X-XSS-Protection': '0',
-})
-
 export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html lang={APP_CONFIG.language} suppressHydrationWarning>
@@ -51,6 +45,12 @@ export function Layout({ children }: { children: ReactNode }) {
 		</html>
 	)
 }
+
+export const headers: Route.HeadersFunction = () => ({
+	'Referrer-Policy': 'strict-origin-when-cross-origin',
+	'X-Content-Type-Options': 'nosniff',
+	'X-XSS-Protection': '0',
+})
 
 export default function Root() {
 	const [container] = useState(createAppContainer)

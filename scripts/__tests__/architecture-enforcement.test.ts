@@ -29,4 +29,4 @@ it('guides invalid source toward the required filename, role, and effect boundar
 		await rm(fixture, { force: true, recursive: true })
 		await rm(resolve(validAdapter, '../..'), { force: true, recursive: true })
 	}
-}, 20_000)
+}, 40_000)

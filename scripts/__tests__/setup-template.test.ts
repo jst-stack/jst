@@ -44,6 +44,7 @@ it('creates a configured clean product', async () => {
 		const route = await readFile(resolve(fixtureRoot, 'src/pages/_index/route.tsx'), 'utf8')
 
 		expect(packageJson.name).toBe('field-notes')
+		expect(packageJson.engines.node).toBe('>=24.15.0 <25')
 		expect(packageJson.scripts).not.toHaveProperty('template:setup')
 		expect(packageJson.scripts.doctor).toContain('react-doctor')
 		expect(await readFile(resolve(fixtureRoot, '.husky/pre-commit'), 'utf8'))
@@ -51,6 +52,7 @@ it('creates a configured clean product', async () => {
 		expect(packageJson.dependencies).toHaveProperty('@needle-di/core')
 		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
 		expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
+		expect(packageJson.knip?.ignore).not.toContain('jst.config.ts')
 		expect(config).toContain('description: \'Your team\\\'s private notes.\'')
 		expect(config).toContain('language: \'uk-UA\'')
 		expect(config).toContain('name: \'Field Notes\'')
@@ -71,6 +73,7 @@ it('creates a configured clean product', async () => {
 		await expect(access(resolve(fixtureRoot, 'src/features/.gitkeep'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, 'src/widgets/.gitkeep'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, 'skills/frontend-architecture/SKILL.md'))).resolves.toBeUndefined()
+		await expect(access(resolve(fixtureRoot, 'jst.compatibility.json'))).resolves.toBeUndefined()
 		await expect(access(resolve(fixtureRoot, '.gitmodules'))).rejects.toThrow()
 		await expect(access(resolve(fixtureRoot, 'showcase'))).rejects.toThrow()
 		await expect(access(resolve(fixtureRoot, 'scripts/__tests__'))).rejects.toThrow()
@@ -80,7 +83,34 @@ it('creates a configured clean product', async () => {
 	finally {
 		await rm(temporaryRoot, { force: true, recursive: true })
 	}
-})
+}, 30_000)
+
+it('configures SCSS Modules consistently', async () => {
+	const { fixtureRoot, temporaryRoot } = await createFixture('scss')
+
+	try {
+		await runSetup(fixtureRoot, ['--yes', '--name', 'scss-app', '--style', 'scss'])
+		const packageJson = await readPackageJson(fixtureRoot)
+		const policy = await readFile(resolve(fixtureRoot, 'jst.config.ts'), 'utf8')
+		const stylelint = await readFile(resolve(fixtureRoot, 'stylelint.config.mjs'), 'utf8')
+
+		expect(packageJson.devDependencies).toHaveProperty('sass')
+		expect(packageJson.devDependencies).toHaveProperty('stylelint-config-standard-scss')
+		expect(packageJson.devDependencies).not.toHaveProperty('postcss-scss')
+		expect(packageJson.devDependencies).not.toHaveProperty('stylelint-config-standard')
+		expect(Object.keys(packageJson.devDependencies)).toEqual(Object.keys(packageJson.devDependencies).toSorted())
+		expect(policy).toContain('moduleExtension: \'scss\'')
+		expect(stylelint).toContain('extends: [\'stylelint-config-standard-scss\']')
+		await expect(access(resolve(fixtureRoot, 'src/root.module.scss'))).resolves.toBeUndefined()
+		await expect(access(resolve(fixtureRoot, 'src/root.module.css'))).rejects.toThrow()
+		expect(await readFile(resolve(fixtureRoot, 'src/root.tsx'), 'utf8'))
+			.toContain('./root.module.scss')
+		await expect(access(resolve(fixtureRoot, 'package-lock.json'))).rejects.toThrow()
+	}
+	finally {
+		await rm(temporaryRoot, { force: true, recursive: true })
+	}
+}, 30_000)
 
 async function createFixture(name: string) {
 	const temporaryRoot = await mkdtemp(join(tmpdir(), `js-template-setup-${name}-`))
@@ -113,6 +143,8 @@ async function readPackageJson(fixtureRoot: string) {
 		name: string
 		scripts: Record<string, string>
 		dependencies: Record<string, string>
+		devDependencies: Record<string, string>
+		engines: { node: string }
 		knip?: { ignore: string[] }
 	}
 }

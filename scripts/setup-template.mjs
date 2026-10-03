@@ -1,4 +1,4 @@
-import { readFile, rm, writeFile } from 'node:fs/promises'
+import { readdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
@@ -7,6 +7,7 @@ import { parseArgs } from 'node:util'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const colorSchemes = ['light', 'dark', 'auto']
+const styles = ['css', 'scss']
 const primaryColors = [
 	'dark',
 	'gray',
@@ -23,7 +24,7 @@ const primaryColors = [
 	'yellow',
 	'orange',
 ]
-const templateOnlyPaths = ['.gitmodules', 'AUDIT.md', 'scripts/__tests__', 'showcase']
+const templateOnlyPaths = ['.gitmodules', 'AUDIT.md', 'jst.template.json', 'scripts/__tests__', 'showcase']
 
 await main()
 
@@ -37,6 +38,7 @@ async function main() {
 				'lang': { type: 'string' },
 				'name': { type: 'string' },
 				'primary-color': { type: 'string' },
+				'style': { type: 'string' },
 				'title': { type: 'string' },
 				'yes': { type: 'boolean', short: 'y' },
 			},
@@ -73,6 +75,7 @@ async function resolveOptions(values) {
 			language: values.lang ?? 'en',
 			name,
 			primaryColor: values['primary-color'] ?? 'lime',
+			style: values.style ?? 'css',
 			title,
 		}
 	}
@@ -89,6 +92,7 @@ async function resolveOptions(values) {
 			language: values.lang ?? await ask(prompts, 'Document language', 'en'),
 			name,
 			primaryColor: values['primary-color'] ?? await ask(prompts, `Mantine primary color (${primaryColors.join('/')})`, 'lime'),
+			style: values.style ?? await ask(prompts, `CSS Modules language (${styles.join('/')})`, 'css'),
 			title,
 		}
 	}
@@ -121,6 +125,9 @@ function validateOptions(options) {
 	if (!primaryColors.includes(options.primaryColor)) {
 		throw new Error(`Primary color must be one of: ${primaryColors.join(', ')}.`)
 	}
+	if (!styles.includes(options.style)) {
+		throw new Error(`Style language must be one of: ${styles.join(', ')}.`)
+	}
 }
 
 async function setupProject(options) {
@@ -129,6 +136,7 @@ async function setupProject(options) {
 	}
 
 	await writeAppConfig(options)
+	await configureStyles(options.style)
 	await updatePackageJson(options)
 	await updatePackageLock(options)
 	await writeReadme(options)
@@ -154,14 +162,75 @@ async function updatePackageJson(options) {
 	const packageJson = await readJson(packageJsonPath)
 
 	packageJson.name = options.name
+	if (options.style === 'scss') {
+		delete packageJson.devDependencies['stylelint-config-standard']
+		packageJson.devDependencies.sass = '^1.105.0'
+		packageJson.devDependencies['stylelint-config-standard-scss'] = '^17.0.0'
+		packageJson.devDependencies = Object.fromEntries(
+			Object.entries(packageJson.devDependencies).sort(([left], [right]) => left.localeCompare(right)),
+		)
+	}
 	delete packageJson.scripts['template:setup']
 	packageJson.knip = { ignore: ['src/shared/lib/react.lib.ts', 'src/shared/ui/svgIcon.component.tsx'] }
 
 	await writeJson(packageJsonPath, packageJson)
 }
 
+async function configureStyles(style) {
+	await writeFile(resolve(root, 'jst.config.ts'), `export default {\n\tstyles: {\n\t\tmoduleExtension: '${style}',\n\t},\n} as const\n`)
+	if (style === 'css') {
+		return
+	}
+	await writeFile(resolve(root, 'stylelint.config.mjs'), createScssStylelintConfig())
+	for (const path of await listFiles(resolve(root, 'src'))) {
+		if (path.endsWith('.module.css')) {
+			await rename(path, path.replace(/\.module\.css$/u, '.module.scss'))
+			continue
+		}
+		if (/\.[jt]sx?$/u.test(path)) {
+			const source = await readFile(path, 'utf8')
+			await writeFile(path, source.replaceAll('.module.css', '.module.scss'))
+		}
+	}
+}
+
+function createScssStylelintConfig() {
+	return `export default {
+\textends: ['stylelint-config-standard-scss'],
+\toverrides: [
+\t\t{
+\t\t\tfiles: ['src/**/*.module.scss'],
+\t\t\trules: {
+\t\t\t\t'no-descending-specificity': null,
+\t\t\t\t'selector-class-pattern': [
+\t\t\t\t\t'^[a-z][a-zA-Z0-9]*$',
+\t\t\t\t\t{ message: 'Use camelCase class names in SCSS Modules' },
+\t\t\t\t],
+\t\t\t},
+\t\t},
+\t\t{
+\t\t\tfiles: ['src/index.css'],
+\t\t\trules: { 'selector-class-pattern': null },
+\t\t},
+\t],
+}
+`
+}
+
+async function listFiles(directory) {
+	const entries = await readdir(directory, { withFileTypes: true })
+	return (await Promise.all(entries.map((entry) => {
+		const path = resolve(directory, entry.name)
+		return entry.isDirectory() ? listFiles(path) : [path]
+	}))).flat()
+}
+
 async function updatePackageLock(options) {
 	const packageLockPath = resolve(root, 'package-lock.json')
+	if (options.style === 'scss') {
+		await rm(packageLockPath, { force: true })
+		return
+	}
 	const packageLock = await readJson(packageLockPath)
 
 	packageLock.name = options.name
@@ -248,6 +317,7 @@ Options:
   --lang <tag>                  document language, for example en or uk-UA
   --color-scheme <value>        light, dark, or auto
   --primary-color <value>       Mantine default color name
+  --style <language>            css or scss
   -y, --yes                     accept defaults for missing options
   -h, --help                    show this help
 `

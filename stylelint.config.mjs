@@ -2,7 +2,7 @@ export default {
 	extends: ['stylelint-config-standard'],
 	overrides: [
 		{
-			files: ['src/**/*.module.css'],
+			files: ['src/**/*.module.{css,scss}'],
 			rules: {
 				'no-descending-specificity': null,
 				'selector-class-pattern': [

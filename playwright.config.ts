@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 const isCI = Boolean(process.env.CI)
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173)
+const fullBrowserMatrix = process.env.PLAYWRIGHT_FULL_MATRIX === '1'
 
 export default defineConfig({
 	testDir: './e2e',
@@ -27,6 +28,14 @@ export default defineConfig({
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
 		},
+		...(fullBrowserMatrix
+			? [
+					{ name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+					{ name: 'webkit', use: { ...devices['Desktop Safari'] } },
+					{ name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+					{ name: 'mobile-safari', use: { ...devices['iPhone 15'] } },
+				]
+			: []),
 	],
 
 	webServer: {

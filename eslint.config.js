@@ -1,10 +1,17 @@
 import antfu from '@antfu/eslint-config'
 import jst from '@jst-stack/eslint-plugin'
+import policy from './jst.config.ts'
 
 export default antfu(
 	{
 		react: true,
 		typescript: {
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: ['./*.js', './*.ts'],
+					defaultProject: 'tsconfig.json',
+				},
+			},
 			tsconfigPath: 'tsconfig.json',
 			overridesTypeAware: {
 				'ts/no-misused-promises': ['error', {
@@ -34,5 +41,5 @@ export default antfu(
 			reportUnusedDisableDirectives: 'error',
 		},
 	},
-	...jst.configs.recommended,
+	...jst.createConfig(policy),
 )

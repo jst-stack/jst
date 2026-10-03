@@ -1,0 +1,18 @@
+{
+	"schemaVersion": 1,
+	"template": {
+		"version": "0.4.0-next.0",
+		"releaseTag": "v0.4.0"
+	},
+	"runtime": {
+		"node": ">=24.15.0 <25"
+	},
+	"packageManagers": {
+		"npm": ">=11 <12",
+		"pnpm": ">=10 <11"
+	},
+	"packages": {
+		"@jst-stack/eslint-plugin": ">=0.3.0 <0.4.0",
+		"create-jst": ">=0.4.0 <0.5.0"
+	}
+}
