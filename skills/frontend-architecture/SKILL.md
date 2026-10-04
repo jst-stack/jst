@@ -35,6 +35,10 @@ Static pages and trivial local controls do not need every layer. Stateful workfl
 - `shared` contains product-agnostic infrastructure only. Promote code here after a second real consumer.
 - DTOs describe transport data only; never expose them to UI. `shared/api` owns generic HTTP mechanics. Entity API repositories own endpoints and typed request contracts. Services map/orchestrate domain data. Reatom stores expose loading, error, derived state, and user actions. Add runtime schema validation at an untrusted repository boundary.
 
+Assign behavior to the layer that owns the decision, not the layer that happens to hold the data. An entity may own reusable domain state and domain-wide operations. A feature owns its workflow lifecycle: selection, filters, feature preferences, submission guards, optimistic state, rollback, undo history, user-facing outcome messages, and workflow-specific orchestration. If removing a feature makes a port, atom, message, or operation meaningless, it belongs to that feature. Do not hide a feature in a thin proxy whose real behavior lives in an entity store.
+
+Before coding a multi-feature request, write a short ownership map for yourself: domain vocabulary and invariants; each workflow and its state; effect ports and their consumers; composition-only coordination. Re-check it before delivery. Passing layer-direction lint is necessary, not proof that responsibilities are correctly owned.
+
 ## DI boundary
 
 Directly import stable lower-layer code: types, pure models, mappers, and components. Use DI for effectful or replaceable boundaries such as HTTP, storage, clocks, analytics, and request-scoped services, or when tests must substitute an implementation. Do not inject plain data or add an interface with one non-effectful implementation.
@@ -68,6 +72,6 @@ Removing the demo means deleting demo slices, not `src/app/container`, `src/shar
 
 ## Delivery check
 
-Keep transport failure and empty/loading states explicit. Test services/stores with substituted ports and user flows with role-based Playwright locators. Run `npm run check`; it verifies layer rules, UI isolation, and the architecture kernel. Add abstractions only when the current slice proves they are needed.
+Keep transport failure and empty/loading states explicit. Test services/stores with substituted ports and user flows with role-based Playwright locators. Test names must describe behavior actually exercised; cover the risky transitions named in the request, not only the happy path. Tests obey the same public APIs and slice boundaries as production code—own a double locally or expose an intentional testing contract instead of importing another slice's private `__tests__` files. Run `npm run check`; it verifies layer rules, UI isolation, and the architecture kernel. Add abstractions only when the current slice proves they are needed.
 
 Create slices with `npm run create:slice -- <entity|feature|widget> <lowerCamelName>`. Source files follow `<lowerCamelName>.<role>.ts(x)` and the role directories enforced by ESLint. Do not disable architecture, naming, effect-boundary, complexity, or size rules inline; split the responsibility or move it to the reported boundary.

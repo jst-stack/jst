@@ -15,7 +15,9 @@ app → pages → widgets → features → entities → shared
 - `entities` own domain types, models, mappers, repositories, services, stores, and entity UI.
 - `shared` owns product-agnostic infrastructure. Move code here only after a second real consumer.
 
-Dependencies point downward. Production slices cannot import sibling slices directly; compose them from a higher layer or inject a narrow consumer-owned port. Tests may reach composition roots.
+Ownership follows the decision, not the data. Entities may own reusable domain state and domain-wide operations. Features own workflow state and policy: selection, filters and their persistence, submission guards, optimistic lifecycle, rollback, undo, outcome messages, and workflow-specific orchestration. If deleting a feature would make a port or state meaningless, that code belongs to the feature. A feature must not be a thin proxy over workflow logic hidden in an entity store.
+
+Dependencies point downward. Slices cannot import sibling slices directly; compose them from a higher layer or inject a narrow consumer-owned port. Tests follow the same public APIs and slice isolation as production code. Keep a test double with its consumer or expose an intentional testing contract instead of deep-importing another slice's private `__tests__` directory.
 
 Every entity, feature, and widget exposes its supported surface through `<slice>.public.ts`. Other slices and pages import that file instead of deep-importing private implementation. `create:slice` generates the public API automatically.
 
@@ -78,6 +80,7 @@ Local presentation state stays local. Do not turn a component hook into a hidden
 - Unit-test models, parsers, services, and stores near their owning code.
 - Group Playwright specs by product area; keep universal SSR, hydration, accessibility, motion, and responsive checks in `e2e/smoke`.
 - Use role-based browser locators and test observable behavior, not implementation details.
+- Make test names truthful and cover the risky transitions explicitly requested: paging, cross-filter selection, duplicate submission, rollback, and undo are separate behaviors.
 - Run `npm run check` before review. It validates imports, feature UI isolation, style ownership, types, tests, production builds, and dead code.
 
 The executable rules come from [`@jst-stack/eslint-plugin`](https://github.com/jst-stack/eslint-plugin): its flat-config preset runs in editors and its `jst-lint` CLI validates cross-file architecture and stylesheet ownership. Stylelint handles CSS syntax. The concise coding-agent contract lives in `skills/frontend-architecture/SKILL.md`.

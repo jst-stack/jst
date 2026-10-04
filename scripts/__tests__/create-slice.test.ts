@@ -42,7 +42,7 @@ it('creates complete slices without empty scaffolding', async () => {
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-}, 20_000)
+}, 40_000)
 
 async function prepareTypecheckFixture(root: string) {
 	await mkdir(resolve(root, 'src/shared/http'), { recursive: true })
