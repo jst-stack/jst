@@ -258,10 +258,11 @@ Verification completed at this checkpoint:
 - Showcase full browser matrix: passed 73 contracts with 2 documented platform skips across Chromium, Firefox, WebKit, mobile Chrome, and mobile Safari.
 - Showcase Lighthouse CI: passed three production runs against the stored Core Web Vitals and audit baseline.
 - Fresh clean CSS and SCSS projects: both passed a real npm install followed by the complete generated-project `npm run check` flow.
+- npm 11 and npm 12 clean installs pass against lockfiles containing the complete optional WASM dependency graph.
 
 Still in progress at this checkpoint:
 
-- The policy package is published as `@jst-stack/eslint-plugin@0.3.2`; JST and showcase consume `^0.3.2`, use typed `defineConfig`, and enforce `jst-lint budgets` after production builds.
+- The policy package is published as `@jst-stack/eslint-plugin@0.3.3`; JST and showcase consume `^0.3.3`, use typed `defineConfig`, and enforce `jst-lint budgets` after production builds.
 - The slice generator consumes normalized policy for layers, alias, test convention, public API suffix, style extension, and UI/test directories; the override path is covered by integration tests.
 - Run released-artifact npm/pnpm canaries on Linux/macOS/Windows after the 0.4.0 template and CLI tags exist.
 - Complete the final cross-platform/release audit; CLI project-creation and plugin lint baselines are already stored and passing locally.
