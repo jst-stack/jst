@@ -13,13 +13,20 @@ const repositoryRoot = resolve(import.meta.dirname, '../..')
 it('creates complete slices without empty scaffolding', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-'))
 	try {
-		await execute(process.execPath, [script, 'entity', 'accountSettings', '--ui', '--repository', '--tests', '--no-install'], { cwd: root })
+		await execute(process.execPath, [script, '--', 'entity', 'accountSettings', '--ui', '--repository', '--tests', '--no-install'], { cwd: root })
 		await expect(access(resolve(root, 'src/entities/accountSettings/model/accountSettings.model.ts'))).resolves.toBeUndefined()
 		await expect(access(resolve(root, 'src/entities/accountSettings/repository/accountSettings.dto.ts'))).resolves.toBeUndefined()
 		await expect(access(resolve(root, 'src/entities/accountSettings/ui/accountSettings.component.module.css'))).resolves.toBeUndefined()
 		await expect(access(resolve(root, 'src/entities/accountSettings/__tests__/accountSettings.test.tsx'))).resolves.toBeUndefined()
 		await expect(access(resolve(root, 'src/entities/accountSettings/model/.gitkeep'))).rejects.toThrow()
 		await prepareTypecheckFixture(root)
+		await execute(process.execPath, [script, 'feature', 'readingList', '--stateful', '--no-install'], { cwd: root })
+		expect(await readFile(resolve(root, 'src/features/readingList/readingList.public.ts'), 'utf8'))
+			.toContain('ReadingListEntry')
+		expect(await readFile(resolve(root, 'src/features/readingList/readingList.entry.tsx'), 'utf8'))
+			.toContain('reatomComponent')
+		expect(await readFile(resolve(root, 'src/features/readingList/readingList.store.ts'), 'utf8'))
+			.toContain('class ReadingListStore')
 		try {
 			await execute(process.execPath, [
 				resolve(repositoryRoot, 'node_modules/typescript/bin/tsc'),
@@ -47,6 +54,16 @@ export const HTTP_CLIENT_TOKEN = new InjectionToken<HttpClient>('HTTP_CLIENT')
 `)
 	await writeFile(resolve(root, 'src/vite-env.d.ts'), 'declare module \'*.module.css\' { const classes: Record<string, string>; export default classes }\n')
 	await writeFile(resolve(root, 'src/testing-library.d.ts'), `declare module '@testing-library/react' { export function render(value: unknown): void; export const screen: { getByRole(role: string, options?: unknown): unknown } }\n`)
+	await writeFile(resolve(root, 'src/reatom.d.ts'), `
+declare module '@reatom/core' {
+	export function action<T extends (...args: never[]) => unknown>(callback: T, name?: string): T
+	export function atom<T>(value: T, name?: string): { (): T; set(value: T): void }
+	export function wrap<T extends (...args: never[]) => unknown>(callback: T): T
+}
+declare module '@reatom/react' {
+	export function reatomComponent<T>(component: T, name?: string): T
+}
+`)
 	await writeFile(resolve(root, 'tsconfig.json'), `${JSON.stringify({
 		compilerOptions: {
 			baseUrl: '.',

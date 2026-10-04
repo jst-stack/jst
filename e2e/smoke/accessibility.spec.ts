@@ -1,7 +1,10 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { APP_CONFIG } from '../../src/shared/app.config'
 
-for (const colorScheme of ['light', 'dark'] as const) {
+const colorSchemes = getTestColorSchemes(APP_CONFIG.colorScheme)
+
+for (const colorScheme of colorSchemes) {
 	test(`home page has no automatically detectable accessibility violations in ${colorScheme} mode`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' })
 		await page.goto('/')
@@ -11,6 +14,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 		expect(violations).toEqual([])
 	})
+}
+
+function getTestColorSchemes(colorScheme: 'auto' | 'dark' | 'light') {
+	return colorScheme === 'auto' ? ['light', 'dark'] as const : [colorScheme]
 }
 
 test('keyboard users can bypass repeated navigation', async ({ page }) => {

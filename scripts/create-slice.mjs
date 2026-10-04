@@ -6,10 +6,11 @@ import { createInterface } from 'node:readline/promises'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
+const rawArguments = process.argv.slice(2)
 const command = parseArgs({
 	allowNegative: true,
 	allowPositionals: true,
-	args: process.argv.slice(2),
+	args: rawArguments[0] === '--' ? rawArguments.slice(1) : rawArguments,
 	options: {
 		'dry-run': { type: 'boolean' },
 		'install': { default: true, type: 'boolean' },
@@ -67,7 +68,7 @@ catch (error) {
 
 async function resolveValues(kind, values) {
 	if (!process.stdin.isTTY || values.yes) {
-		return values
+		return withDefaults(kind, values)
 	}
 	const prompts = createInterface({ input: process.stdin, output: process.stdout })
 	try {
@@ -84,10 +85,17 @@ async function resolveValues(kind, values) {
 		if (kind === 'feature') {
 			resolved.public ??= await confirm(prompts, 'Expose a public API?')
 		}
-		return resolved
+		return withDefaults(kind, resolved)
 	}
 	finally {
 		prompts.close()
+	}
+}
+
+function withDefaults(kind, values) {
+	return {
+		...values,
+		public: values.public ?? kind === 'feature',
 	}
 }
 
@@ -108,10 +116,10 @@ function createPlan({ kind, name, policy, style, values }) {
 	const devDependencies = new Set()
 	if (kind === 'entity') {
 		files.set(`model/${name}.model.ts`, createModel(typeName))
-		files.set(`${name}${publicApiSuffix}.ts`, createEntityPublicApi(typeName, name, values.repository))
+		files.set(`${name}${publicApiSuffix}.ts`, createEntityPublicApi(typeName, name, values.repository, values.stateful))
 	}
 	if (kind === 'feature') {
-		files.set(`${name}.entry.tsx`, `import { ${typeName}View } from './${uiDirectory}/${name}.component'\n\nexport function ${typeName}Entry() {\n\treturn <${typeName}View />\n}\n`)
+		files.set(`${name}.entry.tsx`, createFeatureEntry(typeName, name, uiDirectory, values.stateful))
 	}
 	if (kind === 'widget') {
 		files.set(`${name}${publicApiSuffix}.ts`, `export { ${typeName} } from './${uiDirectory}/${name}.component'\n`)
@@ -121,7 +129,7 @@ function createPlan({ kind, name, policy, style, values }) {
 	}
 	if (values.ui || kind !== 'entity') {
 		const componentName = kind === 'feature' ? `${typeName}View` : typeName
-		files.set(`${uiDirectory}/${name}.component.tsx`, createComponent(componentName, name, style))
+		files.set(`${uiDirectory}/${name}.component.tsx`, createComponent(componentName, name, style, kind === 'feature' && values.stateful))
 		files.set(`${uiDirectory}/${name}.component.module.${style}`, `.root {\n\tdisplay: block;\n}\n`)
 	}
 	if (values.repository) {
@@ -138,8 +146,14 @@ function createPlan({ kind, name, policy, style, values }) {
 		files.set(`services/${name}.service.ts`, `export class ${typeName}Service {}\n`)
 	}
 	if (values.stateful) {
+		if (kind === 'widget') {
+			fail('--stateful is available only for entity and feature slices.')
+		}
 		dependencies.add('@reatom/core')
-		files.set(`${name}.store.ts`, `import { atom } from '@reatom/core'\n\nexport const ${name}State = atom(null, '${name}.state')\n`)
+		if (kind === 'feature') {
+			dependencies.add('@reatom/react')
+		}
+		files.set(`${name}.store.ts`, createStore(typeName, name))
 	}
 	if (values.persistence) {
 		assertEntityOption(kind, '--persistence')
@@ -172,12 +186,26 @@ function createModel(typeName) {
 	return `export interface ${typeName} {\n\treadonly id: string\n}\n\nexport function create${typeName}(value: ${typeName}): ${typeName} {\n\treturn { ...value }\n}\n`
 }
 
-function createEntityPublicApi(typeName, name, hasRepository) {
-	return `export { create${typeName} } from './model/${name}.model'\nexport type { ${typeName} } from './model/${name}.model'\n${hasRepository ? `export { ${name}RepositoryToken } from './repository/${name}.repository'\nexport type { ${typeName}Repository } from './repository/${name}.repository'\n` : ''}`
+function createEntityPublicApi(typeName, name, hasRepository, stateful) {
+	return `export { create${typeName} } from './model/${name}.model'\nexport type { ${typeName} } from './model/${name}.model'\n${stateful ? `export { ${typeName}Store } from './${name}.store'\n` : ''}${hasRepository ? `export { ${name}RepositoryToken } from './repository/${name}.repository'\nexport type { ${typeName}Repository } from './repository/${name}.repository'\n` : ''}`
 }
 
-function createComponent(componentName, name, style) {
+function createComponent(componentName, name, style, stateful) {
+	if (stateful) {
+		return `import { Button, Stack, Text } from '@mantine/core'\nimport styles from './${name}.component.module.${style}'\n\ninterface ${componentName}Props {\n\treadonly count: number\n\treadonly onIncrement: () => void\n}\n\nexport function ${componentName}({ count, onIncrement }: ${componentName}Props) {\n\treturn (\n\t\t<Stack aria-label="${name}" className={styles.root} component="section">\n\t\t\t<Text>\n\t\t\t\tCount:\n\t\t\t\t{' '}\n\t\t\t\t{count}\n\t\t\t</Text>\n\t\t\t<Button onClick={onIncrement}>Increment</Button>\n\t\t</Stack>\n\t)\n}\n`
+	}
 	return `import { Box } from '@mantine/core'\nimport styles from './${name}.component.module.${style}'\n\nexport function ${componentName}() {\n\treturn <Box aria-label="${name}" className={styles.root} component="section" />\n}\n`
+}
+
+function createFeatureEntry(typeName, name, uiDirectory, stateful) {
+	if (!stateful) {
+		return `import { ${typeName}View } from './${uiDirectory}/${name}.component'\n\nexport function ${typeName}Entry() {\n\treturn <${typeName}View />\n}\n`
+	}
+	return `import { wrap } from '@reatom/core'\nimport { reatomComponent } from '@reatom/react'\nimport { ${typeName}Store } from './${name}.store'\nimport { ${typeName}View } from './${uiDirectory}/${name}.component'\n\nconst store = new ${typeName}Store()\n\nfunction ${typeName}EntryViewModel() {\n\treturn <${typeName}View count={store.count()} onIncrement={wrap(store.increment)} />\n}\n\nexport const ${typeName}Entry = reatomComponent(${typeName}EntryViewModel, '${typeName}Entry')\n`
+}
+
+function createStore(typeName, name) {
+	return `import { action, atom } from '@reatom/core'\n\nexport class ${typeName}Store {\n\tcount = atom(0, '${name}.count')\n\tincrement = action(() => this.count.set(this.count() + 1), '${name}.increment')\n}\n`
 }
 
 function createDto(typeName, name) {
@@ -235,11 +263,14 @@ async function readPolicy(root) {
 async function installDependencies(root, plan) {
 	const manifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'))
 	const packageManager = manifest.packageManager?.startsWith('pnpm@') ? 'pnpm' : 'npm'
+	const install = packageManager === 'pnpm'
+		? ['add', '--ignore-workspace-root-check']
+		: ['install']
 	if (plan.dependencies.length) {
-		await run(packageManager, ['install', ...plan.dependencies], root)
+		await run(packageManager, [...install, ...plan.dependencies], root)
 	}
 	if (plan.devDependencies.length) {
-		await run(packageManager, ['install', '--save-dev', ...plan.devDependencies], root)
+		await run(packageManager, [...install, '--save-dev', ...plan.devDependencies], root)
 	}
 }
 

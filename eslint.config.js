@@ -41,5 +41,11 @@ export default antfu(
 			reportUnusedDisableDirectives: 'error',
 		},
 	},
+	{
+		files: ['src/**/*.entry.tsx'],
+		rules: {
+			'react-refresh/only-export-components': ['error', { extraHOCs: ['reatomComponent'] }],
+		},
+	},
 	...jst.createConfig(policy),
 )

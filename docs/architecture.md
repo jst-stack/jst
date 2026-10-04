@@ -17,6 +17,8 @@ app → pages → widgets → features → entities → shared
 
 Dependencies point downward. Production slices cannot import sibling slices directly; compose them from a higher layer or inject a narrow consumer-owned port. Tests may reach composition roots.
 
+Every entity, feature, and widget exposes its supported surface through `<slice>.public.ts`. Other slices and pages import that file instead of deep-importing private implementation. `create:slice` generates the public API automatically.
+
 ## A complete vertical slice
 
 ```text
@@ -102,6 +104,12 @@ Create a compliant empty slice instead of assembling folders by hand:
 npm run create:slice -- entity account
 npm run create:slice -- feature signIn
 npm run create:slice -- widget accountSummary
+```
+
+Add `--stateful` to an entity or feature when it needs a Reatom view model. A stateful feature scaffold includes the store, reactive entry, props-driven view, public API, and required Reatom packages:
+
+```bash
+npm run create:slice -- feature checkout --stateful
 ```
 
 The limits are defaults, not permission to disable rules inline. If a real module cannot fit them, split responsibilities first; change a limit only through review with a concrete counterexample.

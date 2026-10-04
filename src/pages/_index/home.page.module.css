@@ -16,7 +16,12 @@
 .lead {
 	max-width: 42rem;
 	margin-top: 1.5rem;
+	color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
 	line-height: 1.65;
+}
+
+.muted {
+	color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
 }
 
 .steps {

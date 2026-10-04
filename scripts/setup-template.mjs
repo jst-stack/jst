@@ -24,7 +24,21 @@ const primaryColors = [
 	'yellow',
 	'orange',
 ]
-const templateOnlyPaths = ['.gitmodules', 'AUDIT.md', 'jst.template.json', 'scripts/__tests__', 'showcase']
+const templateOnlyPaths = [
+	'.github/workflows/release.yml',
+	'.gitmodules',
+	'AUDIT.md',
+	'CHANGELOG.md',
+	'CONTRIBUTING.md',
+	'SECURITY.md',
+	'docs/assets',
+	'docs/compatibility.md',
+	'docs/migrations.md',
+	'docs/releasing.md',
+	'jst.template.json',
+	'scripts/__tests__',
+	'showcase',
+]
 
 await main()
 
@@ -258,23 +272,29 @@ npm ci
 npm run dev
 \`\`\`
 
-Create the first architecture-compliant slice:
+## First feature
+
+Create a props-driven feature with a public API:
 
 \`\`\`bash
 npm run create:slice -- feature firstFeature
 \`\`\`
 
+Use \`--stateful\` when the workflow needs a Reatom view model. Use \`entity\` for domain models and external data boundaries, and \`widget\` for reusable page composition.
+
 ## Quality
 
 - \`npm run validate\` is the fast local gate: lint, architecture, types, and unit tests.
-- \`npm run check\` is the complete release gate: React Doctor, production build, budgets, and unused-code checks included.
-- \`npm run test:e2e\` runs browser contracts.
+- \`npm run check\` adds React Doctor, a production build, budgets, and unused-code checks.
+- \`npm run check:release\` is the complete release gate and includes browser, SSR, hydration, and accessibility contracts.
 
 ## Architecture
 
-Routes are discovered from \`src/pages\`. Follow \`skills/frontend-architecture/SKILL.md\` when adding a vertical slice or reviewing dependency boundaries.
+Routes are discovered from \`src/pages\`. Read \`docs/architecture.md\` before adding a non-trivial vertical slice. It explains dependency direction, public APIs, DI, state, tests, and file contracts.
 
 Generate additional slices with \`npm run create:slice -- <entity|feature|widget> <lowerCamelName>\`.
+
+Coding agents should also follow \`skills/frontend-architecture/SKILL.md\`.
 `,
 	)
 }
