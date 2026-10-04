@@ -9,7 +9,7 @@ FROM node:24.15.0-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build /app/build ./build
 COPY --from=build /app/public ./public
 USER node
