@@ -38,6 +38,7 @@ async function main() {
 				'lang': { type: 'string' },
 				'name': { type: 'string' },
 				'primary-color': { type: 'string' },
+				'quiet': { type: 'boolean' },
 				'style': { type: 'string' },
 				'title': { type: 'string' },
 				'yes': { type: 'boolean', short: 'y' },
@@ -53,7 +54,9 @@ async function main() {
 		const options = await resolveOptions(values)
 		validateOptions(options)
 		await setupProject(options)
-		printSummary(options)
+		if (!values.quiet) {
+			printSummary(options)
+		}
 	}
 	catch (error) {
 		console.error(error instanceof Error ? error.message : error)
