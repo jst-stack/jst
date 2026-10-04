@@ -255,15 +255,23 @@ npm ci
 npm run dev
 \`\`\`
 
+Create the first architecture-compliant slice:
+
+\`\`\`bash
+npm run create:slice -- feature firstFeature
+\`\`\`
+
 ## Quality
 
-\`npm run check\` runs code, style, architecture, unit, type, build, and unused-code checks. Run browser contracts with \`npm run test:e2e\`.
+- \`npm run validate\` is the fast local gate: lint, architecture, types, and unit tests.
+- \`npm run check\` is the complete release gate: React Doctor, production build, budgets, and unused-code checks included.
+- \`npm run test:e2e\` runs browser contracts.
 
 ## Architecture
 
 Routes are discovered from \`src/pages\`. Follow \`skills/frontend-architecture/SKILL.md\` when adding a vertical slice or reviewing dependency boundaries.
 
-Create a compliant slice with \`npm run create:slice -- <entity|feature|widget> <lowerCamelName>\`.
+Generate additional slices with \`npm run create:slice -- <entity|feature|widget> <lowerCamelName>\`.
 `,
 	)
 }

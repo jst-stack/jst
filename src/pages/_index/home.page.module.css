@@ -1,0 +1,60 @@
+.page {
+	display: grid;
+	align-items: center;
+	min-height: 100svh;
+	padding-block: clamp(4rem, 12vw, 8rem);
+}
+
+.title {
+	max-width: 12ch;
+	margin-top: 1rem;
+	font-size: clamp(3rem, 9vw, 7rem);
+	letter-spacing: -0.065em;
+	line-height: 0.92;
+}
+
+.lead {
+	max-width: 42rem;
+	margin-top: 1.5rem;
+	line-height: 1.65;
+}
+
+.steps {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	border-block: 1px solid var(--mantine-color-default-border);
+}
+
+.step {
+	display: grid;
+	align-content: start;
+	gap: 1rem;
+	min-height: 11rem;
+	padding: 1.5rem;
+	border-inline-start: 1px solid var(--mantine-color-default-border);
+}
+
+.step:last-child {
+	border-inline-end: 1px solid var(--mantine-color-default-border);
+}
+
+.command {
+	width: fit-content;
+	font-size: var(--mantine-font-size-md);
+}
+
+@media (width < 48em) {
+	.steps {
+		grid-template-columns: 1fr;
+	}
+
+	.step {
+		min-height: auto;
+		border-inline-end: 1px solid var(--mantine-color-default-border);
+		border-block-end: 1px solid var(--mantine-color-default-border);
+	}
+
+	.step:last-child {
+		border-block-end: 0;
+	}
+}

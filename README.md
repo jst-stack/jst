@@ -24,6 +24,7 @@ npm run dev
 ```
 
 The initializer configures the project, installs dependencies, and starts from the clean application shell.
+Its completion screen shows the first slice, fast validation, and full release commands so the generated project is usable without returning to this README.
 
 JST requires Node.js 24 LTS and supports npm and pnpm. Released CLI, template, and architecture-plugin combinations are recorded in [`jst.compatibility.json`](jst.compatibility.json); project migrations use the same manifest instead of guessing from dependency versions.
 
@@ -60,6 +61,7 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 | `npm run test:unit` | Run unit and integration tests once |
 | `npm run test:e2e` | Run browser contracts and accessibility checks |
 | `npm run lint` | Check code, styles, and architecture boundaries |
+| `npm run validate` | Run the fast local gate: lint, types, and unit tests |
 | `npm run doctor` | Diagnose React correctness and maintainability issues |
 | `npm run check` | Run the complete local CI gate |
 | `npm run create:slice -- entity account` | Create a canonical entity, feature, or widget slice |
