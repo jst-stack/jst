@@ -5,19 +5,20 @@ JST provides boundaries, not a framework inside a framework. Add only the layers
 ## Dependency direction
 
 ```text
-app → pages → widgets → features → entities → shared
+app → pages → modules → widgets → features → entities → shared
 ```
 
 - `app` owns runtime composition, global providers, and application policy.
 - `pages` are route composition roots. Route modules stay thin.
+- `modules` are optional bounded contexts for capabilities spanning multiple routes. They own their internal pages/layers and expose one public API.
 - `widgets` compose reusable page sections without owning domain behavior.
 - `features` own user-facing workflows and expose props-driven views.
 - `entities` own domain types, models, mappers, repositories, services, stores, and entity UI.
 - `shared` owns product-agnostic infrastructure. Move code here only after a second real consumer.
 
-Ownership follows the decision, not the data. Entities may own reusable domain state and domain-wide operations. Features own workflow state and policy: selection, filters and their persistence, submission guards, optimistic lifecycle, rollback, undo, outcome messages, and workflow-specific orchestration. If deleting a feature would make a port or state meaningless, that code belongs to the feature. A feature must not be a thin proxy over workflow logic hidden in an entity store.
+Ownership follows the decision, not the data. Entities own reusable domain state and domain-wide operations. Application services own use cases that remain meaningful without the current UI. Feature view models own interaction state and presentation orchestration: selection, filters, pending state, optimistic projection, rollback/undo presentation, and outcome messages. A feature must not be a thin proxy over workflow logic hidden in an entity store, and a view model must not become a hidden application-service layer.
 
-Dependencies point downward. Slices cannot import sibling slices directly; compose them from a higher layer or inject a narrow consumer-owned port. Tests follow the same public APIs and slice isolation as production code. Keep a test double with its consumer or expose an intentional testing contract instead of deep-importing another slice's private `__tests__` directory.
+Dependencies point downward. Slices and modules cannot import siblings directly; compose them from a higher layer, inject a narrow consumer-owned port/facade, or publish a typed completed fact for genuine fan-out. Tests follow the same public APIs and isolation as production code. Keep a test double with its consumer or expose an intentional testing contract instead of deep-importing another slice's private `__tests__` directory.
 
 Every entity, feature, and widget exposes its supported surface through `<slice>.public.ts`. Other slices and pages import that file instead of deep-importing private implementation. `create:slice` generates the public API automatically.
 
@@ -52,6 +53,15 @@ Import stable lower-layer code directly: types, pure models, mappers, and compon
 
 Do not add an interface for a single pure implementation, inject plain data, or use DI to hide unclear ownership.
 
+Choose the narrowest valid lifetime:
+
+- application: immutable application policy and truly shared infrastructure;
+- request: SSR data and mutable request services;
+- module or route: workflow/view-model state;
+- local: component-owned presentation state.
+
+Mutable feature state must not become an application singleton merely to simplify access.
+
 ## Data boundaries
 
 - Generic request mechanics live in `shared/api`.
@@ -82,6 +92,7 @@ Local presentation state stays local. Do not turn a component hook into a hidden
 - Use role-based browser locators and test observable behavior, not implementation details.
 - Make test names truthful and cover the risky transitions explicitly requested: paging, cross-filter selection, duplicate submission, rollback, and undo are separate behaviors.
 - Run `npm run check` before review. It validates imports, feature UI isolation, style ownership, types, tests, production builds, and dead code.
+- `jst-lint architecture` also validates bounded-context public APIs and any `packages/*` workspace: explicit exports, declared internal dependencies, extraction ADRs, and an acyclic package graph.
 
 The executable rules come from [`@jst-stack/eslint-plugin`](https://github.com/jst-stack/eslint-plugin): its flat-config preset runs in editors and its `jst-lint` CLI validates cross-file architecture and stylesheet ownership. Stylelint handles CSS syntax. The concise coding-agent contract lives in `skills/frontend-architecture/SKILL.md`.
 
@@ -94,6 +105,7 @@ These rules are errors in the editor through ESLint, in `npm run lint`, and at c
 - Source files use `<lowerCamelName>.<role>.ts(x)`. React Router route/entry files and `vite-env.d.ts` are framework exceptions.
 - Browser and HTTP implementations use the `adapter` role; React Router reserves `*.client.*` for client-only modules.
 - Entity, feature, and widget code lives in `layer/<lowerCamelSlice>/...`; loose source files at layer roots are rejected.
+- Bounded-context modules live in `src/modules/<lowerCamelModule>` and may contain internal pages, model, services, repository, and UI behind `<module>.public.ts`.
 - Entity roles use `model`, `repository`, `services`, and `ui`. Feature roles use `model` and `ui`; widget presentation uses `ui`.
 - Components live in `ui`, transport adapters and DTOs in `repository`, services in `services`, and models, mappers, and builders in `model`.
 - `fetch`, `localStorage`, `sessionStorage`, and `indexedDB` are allowed only in entity repositories or shared infrastructure adapters.
@@ -106,6 +118,7 @@ Create a compliant empty slice instead of assembling folders by hand:
 ```bash
 npm run create:slice -- entity account
 npm run create:slice -- feature signIn
+npm run create:slice -- module projectManagement --stateful
 npm run create:slice -- widget accountSummary
 ```
 
@@ -116,3 +129,13 @@ npm run create:slice -- feature checkout --stateful
 ```
 
 The limits are defaults, not permission to disable rules inline. If a real module cannot fit them, split responsibilities first; change a limit only through review with a concrete counterexample.
+
+## Growth path
+
+Use the smallest boundary that matches demonstrated complexity:
+
+```text
+page-local → vertical slices → bounded-context module → workspace package → microfrontend
+```
+
+`npm run create:package -- orderOperations` creates an opt-in workspace package, one public entry, and a required extraction ADR. Use `--kind microfrontend` only when the capability has an autonomous owner and independent deployment; the command then requires owner, host contract, and fallback metadata. See [Architecture evolution](architecture-evolution.md).

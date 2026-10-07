@@ -53,6 +53,9 @@ try {
 		await writeFile(path, source)
 	}
 	await rename(temporary, target)
+	if (['feature', 'module'].includes(kind) && values.public) {
+		await registerPublicApi(root, `src/${layer}/${name}/${name}${policy.imports.publicApiSuffix}.ts`)
+	}
 	if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
 		await installDependencies(root, plan)
 	}
@@ -82,7 +85,7 @@ async function resolveValues(kind, values) {
 		resolved.stateful ??= await confirm(prompts, 'Add Reatom state?')
 		resolved.ui ??= kind !== 'entity' || await confirm(prompts, 'Add Mantine UI?')
 		resolved.tests ??= await confirm(prompts, 'Add tests?', true)
-		if (kind === 'feature') {
+		if (kind === 'feature' || kind === 'module') {
 			resolved.public ??= await confirm(prompts, 'Expose a public API?')
 		}
 		return withDefaults(kind, resolved)
@@ -95,7 +98,7 @@ async function resolveValues(kind, values) {
 function withDefaults(kind, values) {
 	return {
 		...values,
-		public: values.public ?? kind === 'feature',
+		public: values.public ?? ['feature', 'module'].includes(kind),
 	}
 }
 
@@ -118,18 +121,18 @@ function createPlan({ kind, name, policy, style, values }) {
 		files.set(`model/${name}.model.ts`, createModel(typeName))
 		files.set(`${name}${publicApiSuffix}.ts`, createEntityPublicApi(typeName, name, values.repository, values.stateful))
 	}
-	if (kind === 'feature') {
+	if (kind === 'feature' || kind === 'module') {
 		files.set(`${name}.entry.tsx`, createFeatureEntry(typeName, name, uiDirectory, values.stateful))
 	}
 	if (kind === 'widget') {
 		files.set(`${name}${publicApiSuffix}.ts`, `export { ${typeName} } from './${uiDirectory}/${name}.component'\n`)
 	}
-	if (kind === 'feature' && values.public) {
+	if (['feature', 'module'].includes(kind) && values.public) {
 		files.set(`${name}${publicApiSuffix}.ts`, `export { ${typeName}Entry } from './${name}.entry'\n`)
 	}
 	if (values.ui || kind !== 'entity') {
-		const componentName = kind === 'feature' ? `${typeName}View` : typeName
-		files.set(`${uiDirectory}/${name}.component.tsx`, createComponent(componentName, name, style, kind === 'feature' && values.stateful))
+		const componentName = ['feature', 'module'].includes(kind) ? `${typeName}View` : typeName
+		files.set(`${uiDirectory}/${name}.component.tsx`, createComponent(componentName, name, style, ['feature', 'module'].includes(kind) && values.stateful))
 		files.set(`${uiDirectory}/${name}.component.module.${style}`, `.root {\n\tdisplay: block;\n}\n`)
 	}
 	if (values.repository) {
@@ -147,10 +150,10 @@ function createPlan({ kind, name, policy, style, values }) {
 	}
 	if (values.stateful) {
 		if (kind === 'widget') {
-			fail('--stateful is available only for entity and feature slices.')
+			fail('--stateful is available only for entity, feature, and module slices.')
 		}
 		dependencies.add('@reatom/core')
-		if (kind === 'feature') {
+		if (kind === 'feature' || kind === 'module') {
 			dependencies.add('@reatom/react')
 		}
 		files.set(`${name}.store.ts`, createStore(typeName, name))
@@ -225,7 +228,7 @@ function createFetchAdapter(typeName, name, alias) {
 }
 
 function createProvider(typeName, name) {
-	return `import type { Container } from '@needle-di/core'\nimport { ${typeName}FetchAdapter } from './repository/${name}.adapter'\nimport { ${name}RepositoryToken } from './repository/${name}.repository'\n\nexport function provider(container: Container) {\n\tcontainer.bindAll({ provide: ${name}RepositoryToken, useClass: ${typeName}FetchAdapter })\n}\n`
+	return `import type { Container } from '@needle-di/core'\nimport { ${typeName}FetchAdapter } from './repository/${name}.adapter'\nimport { ${name}RepositoryToken } from './repository/${name}.repository'\n\nexport const scope = 'request' as const\n\nexport function provider(container: Container) {\n\tcontainer.bindAll({ provide: ${name}RepositoryToken, useClass: ${typeName}FetchAdapter })\n}\n`
 }
 
 function createMswHandler(name) {
@@ -234,14 +237,15 @@ function createMswHandler(name) {
 
 function createTest(kind, typeName, name, hasRepository, testsUi, uiDirectory) {
 	if (kind === 'entity' && hasRepository) {
-		const uiImports = testsUi ? `import { render, screen } from '@testing-library/react'\nimport { ${typeName} } from '../${uiDirectory}/${name}.component'\n` : ''
-		const uiTest = testsUi ? `\n\tit('renders the props-driven entity view', () => {\n\t\trender(<${typeName} />)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n` : ''
+		const uiImports = testsUi ? `import { HeadlessMantineProvider } from '@mantine/core'\nimport { render, screen } from '@testing-library/react'\nimport { ${typeName} } from '../${uiDirectory}/${name}.component'\n` : ''
+		const uiTest = testsUi ? `\n\tit('renders the props-driven entity view', () => {\n\t\trender(<HeadlessMantineProvider env="test"><${typeName} /></HeadlessMantineProvider>)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n` : ''
 		return `${testsUi ? '// @vitest-environment jsdom\n\n' : ''}${uiImports}import { describe, expect, it } from 'vitest'\nimport { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from '../repository/${name}.dto'\n\ndescribe('${name} boundary', () => {\n\tit('validates and maps an external DTO', () => {\n\t\tconst dto = ${name}DtoSchema.parse({ id: 'example' })\n\t\texpect(map${typeName}Dto(dto)).toEqual({ id: 'example' })\n\t})\n\n\tit('rejects an invalid external DTO', () => {\n\t\texpect(() => ${name}DtoSchema.parse({ id: 1 })).toThrow()\n\t})\n${uiTest}})\n`
 	}
 	if (kind === 'entity') {
 		return `import { describe, expect, it } from 'vitest'\nimport { create${typeName} } from '../model/${name}.model'\n\ndescribe('${name} model', () => {\n\tit('creates an independent domain value', () => {\n\t\tconst source = { id: 'example' }\n\t\tconst model = create${typeName}(source)\n\t\texpect(model).toEqual(source)\n\t\texpect(model).not.toBe(source)\n\t})\n})\n`
 	}
-	return `// @vitest-environment jsdom\n\nimport { render, screen } from '@testing-library/react'\nimport { describe, expect, it } from 'vitest'\nimport { ${typeName}${kind === 'feature' ? 'Entry' : ''} } from '../${kind === 'feature' ? `${name}.entry` : `${uiDirectory}/${name}.component`}'\n\ndescribe('${name} ${kind}', () => {\n\tit('renders its accessible composition boundary', () => {\n\t\trender(<${typeName}${kind === 'feature' ? 'Entry' : ''} />)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n})\n`
+	const hasEntry = kind === 'feature' || kind === 'module'
+	return `// @vitest-environment jsdom\n\nimport { HeadlessMantineProvider } from '@mantine/core'\nimport { render, screen } from '@testing-library/react'\nimport { describe, expect, it } from 'vitest'\nimport { ${typeName}${hasEntry ? 'Entry' : ''} } from '../${hasEntry ? `${name}.entry` : `${uiDirectory}/${name}.component`}'\n\ndescribe('${name} ${kind}', () => {\n\tit('renders its accessible composition boundary', () => {\n\t\trender(<HeadlessMantineProvider env="test"><${typeName}${hasEntry ? 'Entry' : ''} /></HeadlessMantineProvider>)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n})\n`
 }
 
 async function readPolicy(root) {
@@ -272,6 +276,15 @@ async function installDependencies(root, plan) {
 	if (plan.devDependencies.length) {
 		await run(packageManager, [...install, '--save-dev', ...plan.devDependencies], root)
 	}
+}
+
+async function registerPublicApi(root, path) {
+	const manifestPath = resolve(root, 'package.json')
+	const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+	const ignore = new Set(manifest.knip?.ignore ?? [])
+	ignore.add(path)
+	manifest.knip = { ...manifest.knip, ignore: [...ignore].sort() }
+	await writeFile(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`)
 }
 
 async function snapshotProjectFiles(root) {
@@ -316,8 +329,8 @@ async function assertMissing(path) {
 }
 
 function validateInput(kind, name, positionals, values) {
-	if (!['entity', 'feature', 'widget'].includes(kind) || !name || positionals.length !== 2) {
-		fail('Usage: npm run create:slice -- <entity|feature|widget> <lowerCamelName> [options]')
+	if (!['entity', 'feature', 'module', 'widget'].includes(kind) || !name || positionals.length !== 2) {
+		fail('Usage: npm run create:slice -- <entity|feature|module|widget> <lowerCamelName> [options]')
 	}
 	if (!/^[a-z][A-Za-z0-9]*$/u.test(name)) {
 		fail('Slice name must be lowerCamelCase, for example accountSettings.')

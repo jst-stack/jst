@@ -45,7 +45,7 @@ Create the reference application deliberately with `npm create jst@latest my-dem
 ## Architecture
 
 ```text
-app → pages → widgets → features → entities → shared
+app → pages → modules → widgets → features → entities → shared
 ```
 
 Dependencies point toward stable policy. Pages compose the application, features own user outcomes, entities own domain behavior and I/O contracts, and `shared` contains product-agnostic infrastructure only.
@@ -67,6 +67,8 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 | `npm run check:release` | Add SSR, hydration, accessibility, and browser contracts |
 | `npm run create:slice -- entity account` | Create a canonical entity, feature, or widget slice |
 | `npm run create:slice -- feature checkout --stateful` | Create a reactive feature with Reatom wiring |
+| `npm run create:slice -- module projectManagement --stateful` | Create a bounded-context mini-application |
+| `npm run create:package -- orderOperations` | Extract a reviewed workspace boundary with an ADR |
 | `npm run template:setup` | Configure the new product |
 
 ## Project policy
@@ -74,6 +76,8 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 - [Compatibility](docs/compatibility.md)
 - [Migrations](docs/migrations.md)
 - [Production and deployment](docs/deployment.md)
+- [Architecture evolution](docs/architecture-evolution.md)
+- [Architecture recipes](docs/architecture-recipes.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Release process](docs/releasing.md)
 - [Contributing](CONTRIBUTING.md)

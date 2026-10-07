@@ -4,4 +4,5 @@ type ProviderFn = (container: Container) => void
 
 export interface ProviderModule {
 	provider: ProviderFn
+	scope: 'request'
 }

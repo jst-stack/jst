@@ -27,6 +27,12 @@ it('creates complete slices without empty scaffolding', async () => {
 			.toContain('reatomComponent')
 		expect(await readFile(resolve(root, 'src/features/readingList/readingList.store.ts'), 'utf8'))
 			.toContain('class ReadingListStore')
+		await execute(process.execPath, [script, 'module', 'projectManagement', '--stateful', '--tests', '--no-install'], { cwd: root })
+		expect(await readFile(resolve(root, 'src/modules/projectManagement/projectManagement.public.ts'), 'utf8'))
+			.toContain('ProjectManagementEntry')
+		await expect(access(resolve(root, 'src/modules/projectManagement/__tests__/projectManagement.test.tsx'))).resolves.toBeUndefined()
+		const manifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')) as { knip: { ignore: string[] } }
+		expect(manifest.knip.ignore).toContain('src/modules/projectManagement/projectManagement.public.ts')
 		try {
 			await execute(process.execPath, [
 				resolve(repositoryRoot, 'node_modules/typescript/bin/tsc'),
@@ -47,6 +53,7 @@ it('creates complete slices without empty scaffolding', async () => {
 async function prepareTypecheckFixture(root: string) {
 	await mkdir(resolve(root, 'src/shared/http'), { recursive: true })
 	await symlink(resolve(repositoryRoot, 'node_modules'), resolve(root, 'node_modules'), 'dir')
+	await writeFile(resolve(root, 'package.json'), '{"knip":{"ignore":[]}}\n')
 	await writeFile(resolve(root, 'src/shared/http/httpClient.types.ts'), `
 import { InjectionToken } from '@needle-di/core'
 export interface HttpClient { request: (url: string, init?: RequestInit) => Promise<unknown> }

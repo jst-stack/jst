@@ -280,7 +280,7 @@ Create a props-driven feature with a public API:
 npm run create:slice -- feature firstFeature
 \`\`\`
 
-Use \`--stateful\` when the workflow needs a Reatom view model. Use \`entity\` for domain models and external data boundaries, and \`widget\` for reusable page composition.
+Use \`--stateful\` when the workflow needs a Reatom view model. Use \`entity\` for reusable domain capabilities, \`module\` for a bounded context spanning routes, and \`widget\` for reusable page composition.
 
 ## Quality
 
@@ -292,7 +292,7 @@ Use \`--stateful\` when the workflow needs a Reatom view model. Use \`entity\` f
 
 Routes are discovered from \`src/pages\`. Read \`docs/architecture.md\` before adding a non-trivial vertical slice. It explains dependency direction, public APIs, DI, state, tests, and file contracts.
 
-Generate additional slices with \`npm run create:slice -- <entity|feature|widget> <lowerCamelName>\`.
+Generate additional slices with \`npm run create:slice -- <entity|feature|module|widget> <lowerCamelName>\`. Extract a proven boundary with \`npm run create:package -- <lowerCamelName>\` only when reuse, ownership, build, or release pressure is real.
 
 Coding agents should also follow \`skills/frontend-architecture/SKILL.md\`.
 `,
