@@ -1,6 +1,7 @@
 FROM node:24.15.0-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
+COPY scripts/install-git-hooks.mjs ./scripts/install-git-hooks.mjs
 RUN npm ci
 COPY . .
 RUN npm run build

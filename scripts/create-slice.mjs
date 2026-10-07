@@ -308,7 +308,7 @@ async function restoreProjectFiles(files) {
 
 function run(command, args, cwd) {
 	return new Promise((resolvePromise, reject) => {
-		const child = spawn(command, args, { cwd, stdio: 'inherit' })
+		const child = spawn(command, args, { cwd, shell: process.platform === 'win32', stdio: 'inherit' })
 		child.once('error', reject)
 		child.once('close', code => code === 0
 			? resolvePromise()
