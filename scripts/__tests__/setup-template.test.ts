@@ -53,6 +53,7 @@ it('creates a configured clean product', async () => {
 		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
 		expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
 		expect(packageJson.knip?.ignore).not.toContain('jst.config.ts')
+		expect(packageJson.knip?.ignoreDependencies).toContain('@typescript-eslint/utils')
 		expect(config).toContain('description: \'Your team\\\'s private notes.\'')
 		expect(config).toContain('language: \'uk-UA\'')
 		expect(config).toContain('name: \'Field Notes\'')
@@ -156,6 +157,6 @@ async function readPackageJson(fixtureRoot: string) {
 		dependencies: Record<string, string>
 		devDependencies: Record<string, string>
 		engines: { node: string }
-		knip?: { ignore: string[] }
+		knip?: { ignore: string[], ignoreDependencies?: string[] }
 	}
 }

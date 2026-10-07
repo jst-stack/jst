@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"templateVersion": "0.4.11",
+	"templateVersion": "0.4.12",
 	"options": {
 		"colorSchemes": ["light", "dark", "auto"],
 		"primaryColors": ["dark", "gray", "red", "pink", "grape", "violet", "indigo", "blue", "cyan", "teal", "green", "lime", "yellow", "orange"],

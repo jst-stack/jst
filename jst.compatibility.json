@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
 	"template": {
-		"version": "0.4.11",
-		"releaseTag": "v0.4.11"
+		"version": "0.4.12",
+		"releaseTag": "v0.4.12"
 	},
 	"runtime": {
 		"node": ">=24.15.0 <25"

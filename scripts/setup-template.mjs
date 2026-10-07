@@ -188,7 +188,10 @@ async function updatePackageJson(options) {
 		)
 	}
 	delete packageJson.scripts['template:setup']
-	packageJson.knip = { ignore: ['src/shared/lib/react.lib.ts', 'src/shared/ui/svgIcon.component.tsx'] }
+	packageJson.knip = {
+		...packageJson.knip,
+		ignore: ['src/shared/lib/react.lib.ts', 'src/shared/ui/svgIcon.component.tsx'],
+	}
 
 	await writeJson(packageJsonPath, packageJson)
 }
