@@ -2,7 +2,7 @@ FROM node:24.15.0-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY scripts/install-git-hooks.mjs ./scripts/install-git-hooks.mjs
-RUN npm install --global "npm@$(node -p \"require('./package.json').packageManager.split('@')[1]\")" \
+RUN npm install --global npm@$(node -p "require('./package.json').packageManager.split('@')[1]") \
 	&& npm ci
 COPY . .
 RUN npm run build
@@ -11,7 +11,7 @@ FROM node:24.15.0-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install --global "npm@$(node -p \"require('./package.json').packageManager.split('@')[1]\")" \
+RUN npm install --global npm@$(node -p "require('./package.json').packageManager.split('@')[1]") \
 	&& npm ci --omit=dev --ignore-scripts \
 	&& npm cache clean --force
 COPY --from=build /app/build ./build
