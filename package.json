@@ -20,6 +20,7 @@
 		"lint:styles:fix": "stylelint \"src/**/*.{css,scss}\" --fix && jst-lint styles",
 		"doctor": "react-doctor . --blocking warning --no-supply-chain --no-telemetry --yes",
 		"doctor:staged": "node scripts/react-doctor-staged.mjs",
+		"audit:production": "npm audit --omit=dev --audit-level=high",
 		"knip": "knip",
 		"test": "vitest",
 		"test:unit": "vitest run --passWithNoTests",
@@ -28,7 +29,7 @@
 		"validate": "npm run lint && npm run typecheck && npm run test:unit",
 		"check": "npm run lint && npm run doctor && npm run test:unit && npm run build && npm run lint:budgets && npm run knip && npm run check:workspaces",
 		"check:workspaces": "node scripts/check-workspaces.mjs",
-		"check:release": "npm run check && npm run test:e2e",
+		"check:release": "npm run check && npm run audit:production && npm run test:e2e",
 		"create:slice": "node scripts/create-slice.mjs",
 		"create:package": "node scripts/create-package.mjs",
 		"template:setup": "node scripts/setup-template.mjs",
@@ -75,7 +76,9 @@
 		"vitest": "^4.1.11"
 	},
 	"overrides": {
-		"eslint-plugin-regexp": "3.1.1"
+		"eslint-plugin-regexp": "3.1.1",
+		"source-map-js": "1.2.2",
+		"tinypool": "2.2.0"
 	},
 	"knip": {
 		"ignoreDependencies": [

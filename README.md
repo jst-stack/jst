@@ -63,6 +63,7 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 | `npm run lint` | Check code, styles, and architecture boundaries |
 | `npm run validate` | Run the fast local gate: lint, types, and unit tests |
 | `npm run doctor` | Diagnose React correctness and maintainability issues |
+| `npm run audit:production` | Reject high-severity runtime dependency advisories |
 | `npm run check` | Run the complete code and production-build gate |
 | `npm run check:release` | Add SSR, hydration, accessibility, and browser contracts |
 | `npm run create:slice -- entity account` | Create a canonical entity, feature, or widget slice |

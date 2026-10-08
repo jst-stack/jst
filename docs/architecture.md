@@ -122,6 +122,8 @@ npm run create:slice -- module projectManagement --stateful
 npm run create:slice -- widget accountSummary
 ```
 
+The generator prints the public entry to compose from an owning page or higher layer. Knip deliberately rejects a newly generated but unreachable slice, so connect that public entry before running the complete quality gate.
+
 Add `--stateful` to an entity or feature when it needs a Reatom view model. A stateful feature scaffold includes the store, reactive entry, props-driven view, public API, and required Reatom packages:
 
 ```bash

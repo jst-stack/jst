@@ -59,7 +59,11 @@ try {
 	if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
 		await installDependencies(root, plan)
 	}
-	process.stdout.write(`Created ${kind} slice at src/${layer}/${name}.\n`)
+	process.stdout.write(`${[
+		`Created ${kind} slice at src/${layer}/${name}.`,
+		`Next: compose @/${layer}/${name}/${name}${policy.imports.publicApiSuffix} from an owning page or higher layer.`,
+		'Knip intentionally keeps the quality gate red until the new slice is reachable.',
+	].join('\n')}\n`)
 }
 
 catch (error) {
