@@ -2,6 +2,11 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.15
+
+- Keep release installs reproducible with the npm version declared by the project.
+- Refresh optional dependency metadata for clean installs on current Node runners.
+
 ## 0.4.14
 
 - Explain how to connect generated slices while preserving Knip's unreachable-code gate.
