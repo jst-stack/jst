@@ -25,6 +25,7 @@ const primaryColors = [
 	'orange',
 ]
 const templateOnlyPaths = [
+	'.github/workflows/compatibility-pr.yml',
 	'.github/workflows/release.yml',
 	'.gitmodules',
 	'AUDIT.md',
@@ -32,11 +33,20 @@ const templateOnlyPaths = [
 	'CONTRIBUTING.md',
 	'SECURITY.md',
 	'docs/assets',
+	'docs/_config.yml',
 	'docs/compatibility.md',
+	'docs/index.md',
 	'docs/migrations.md',
+	'docs/project-health.md',
 	'docs/releasing.md',
+	'docs/roadmap.md',
+	'docs/sponsorship.md',
+	'docs/updates',
+	'docs/versions.md',
 	'jst.template.json',
 	'scripts/__tests__',
+	'scripts/prepare-compatibility-release.d.mts',
+	'scripts/prepare-compatibility-release.mjs',
 	'showcase',
 ]
 

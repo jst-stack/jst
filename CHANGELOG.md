@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.18
+
+- Keep ecosystem-only release automation and documentation out of generated applications while preserving the complete architecture kernel.
+
 ## 0.4.17
 
 - Add a canonical documentation site, project-health proof, release compatibility automation, pinned container images, hardened dependency resolutions, and adversarial validation across the ecosystem.
