@@ -1,0 +1,60 @@
+name: Prepare compatibility release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      template-version:
+        description: Next template version without the v prefix
+        required: true
+        type: string
+      plugin-version:
+        description: Published @jst-stack/eslint-plugin version
+        required: true
+        type: string
+      summary:
+        description: One-line user-visible release summary
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: compatibility-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.6.2
+      - run: npm ci
+      - name: Update compatibility and release notes
+        run: >-
+          node scripts/prepare-compatibility-release.mjs
+          --template-version "${{ inputs.template-version }}"
+          --plugin-version "${{ inputs.plugin-version }}"
+          --summary "${{ inputs.summary }}"
+      - run: npm install --package-lock-only --ignore-scripts
+      - run: npm run validate
+      - name: Open reviewed release pull request
+        env:
+          BRANCH: automation/compatibility-v${{ inputs.template-version }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git checkout -B "$BRANCH"
+          git add CHANGELOG.md docs/compatibility.md docs/versions.md jst.compatibility.json package.json package-lock.json
+          git commit -m "release: prepare template v${{ inputs.template-version }}"
+          git push --force-with-lease origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "release: prepare template v${{ inputs.template-version }}" --body "Updates the compatibility contract, plugin dependency, versioned documentation, and release notes together. Merge only after the full PR checks pass."

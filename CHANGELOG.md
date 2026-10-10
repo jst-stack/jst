@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.17
+
+- Add a canonical documentation site, project-health proof, release compatibility automation, pinned container images, hardened dependency resolutions, and adversarial validation across the ecosystem.
+
 ## 0.4.16
 
 - Publish the first-feature onboarding, product-fit guidance, public roadmap, sponsorship policy, and expanded diagnostic repair paths.

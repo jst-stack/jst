@@ -14,6 +14,8 @@
 
 An architecture-first React starter for products that need server rendering, explicit dependency boundaries, typed data flow, and enforceable quality gates from the first commit.
 
+[Documentation](https://jst-stack.github.io/jst/) · [Project health](https://jst-stack.github.io/jst/project-health.html) · [Discussions](https://github.com/jst-stack/jst/discussions)
+
 ## Quick start
 
 Create a project with the official initializer:

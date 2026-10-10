@@ -1,0 +1,9 @@
+title: JST documentation
+description: Enforced architecture for maintainable React applications.
+theme: jekyll-theme-primer
+markdown: kramdown
+repository: jst-stack/jst
+url: https://jst-stack.github.io
+baseurl: /jst
+exclude:
+  - decisions

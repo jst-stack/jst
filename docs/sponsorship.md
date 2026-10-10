@@ -13,3 +13,9 @@ Sponsor [@antonbelous0v on GitHub](https://github.com/sponsors/antonbelous0v) wi
 Sponsorship does not purchase technical decisions, hidden product features, priority over security or correctness, or a private support SLA. Sponsor recognition is opt-in and never inserted into generated applications or CLI output.
 
 Project updates report releases, compatibility work, regressions, downloads, contributors, upcoming work, and material shared expenses. Until GitHub Sponsors onboarding is complete, the funding link may open the maintainer profile rather than a payment page.
+
+## First funding goal
+
+The first public goal is **$250 per month**. Reaching it reserves one protected maintainer day every month for dependency compatibility, rule false-positive reduction, security response, and release-canary maintenance. Each quarterly update reports whether the goal was reached and what that capacity produced; unspent shared project expenses are reported explicitly.
+
+Read the [latest maintenance update](updates/2026-q4.md).
