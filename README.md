@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/jst-stack/jst/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jst-stack/jst/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/jst-stack/jst"><img src="https://api.scorecard.dev/projects/github.com/jst-stack/jst/badge" alt="OpenSSF Scorecard"></a>
   <img src="https://img.shields.io/badge/Node.js-24_LTS-5FA04E?style=flat-square" alt="Node.js 24 LTS">
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square" alt="React 19">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6F9CFF?style=flat-square" alt="MIT license"></a>
@@ -52,6 +53,8 @@ Dependencies point toward stable policy. Pages compose the application, features
 
 Read [Architecture](docs/architecture.md) before adding a non-trivial vertical slice. Coding agents should follow [the repository architecture skill](skills/frontend-architecture/SKILL.md).
 
+New to JST? Build the [first production feature](docs/getting-started.md), then read [why and when to use JST](docs/why-jst.md).
+
 ## Commands
 
 | Command | Purpose |
@@ -81,8 +84,10 @@ Read [Architecture](docs/architecture.md) before adding a non-trivial vertical s
 - [Architecture recipes](docs/architecture-recipes.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Release process](docs/releasing.md)
+- [Public roadmap](docs/roadmap.md)
+- [Sponsorship](docs/sponsorship.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [MIT License](LICENSE)
 
-Maintained by [@antonbelous0v](https://github.com/antonbelous0v).
+Questions and proposals belong in [JST Discussions](https://github.com/jst-stack/jst/discussions). Maintained by [@antonbelous0v](https://github.com/antonbelous0v) and sustained through [GitHub Sponsors](https://github.com/sponsors/antonbelous0v).
