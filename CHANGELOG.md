@@ -2,6 +2,12 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.16
+
+- Publish the first-feature onboarding, product-fit guidance, public roadmap, sponsorship policy, and expanded diagnostic repair paths.
+- Link architecture diagnostics to stable rule documentation through `@jst-stack/eslint-plugin` 0.4.3.
+- Verify documentation links and use least-privilege release permissions.
+
 ## 0.4.15
 
 - Keep release installs reproducible with the npm version declared by the project.
