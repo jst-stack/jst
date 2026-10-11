@@ -125,37 +125,140 @@ async function getKnipFailure(root: string) {
 it('rolls back source and manifests when dependency installation fails', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-rollback-'))
 	const manifest = '{"name":"rollback-probe","packageManager":"npm@11.6.2"}\n'
-	try {
-		await mkdir(resolve(root, 'bin'))
-		await writeFile(resolve(root, 'package.json'), manifest)
-		await writeFile(resolve(root, 'bin/npm'), '#!/bin/sh\nexit 23\n')
-		await chmod(resolve(root, 'bin/npm'), 0o755)
+	const bin = resolve(root, 'bin')
 
-		await expect(execute(process.execPath, [script, 'entity', 'failedOrder', '--repository'], {
+	try {
+		await mkdir(bin)
+		await writeFile(resolve(root, 'package.json'), manifest)
+
+		// Use a platform-specific executable to intercept npm.
+		if (process.platform === 'win32') {
+			await writeFile(
+				resolve(bin, 'npm.cmd'),
+				'@echo off\r\nexit /b 23\r\n',
+			)
+		}
+		else {
+			await writeFile(
+				resolve(bin, 'npm'),
+				'#!/bin/sh\nexit 23\n',
+			)
+			await chmod(resolve(bin, 'npm'), 0o755)
+		}
+
+		// Prepend the fixture directory using the platform's PATH separator.
+		const path = [bin, process.env.PATH]
+			.filter(Boolean)
+			.join(process.platform === 'win32' ? ';' : ':')
+
+		await expect(execute(process.execPath, [
+			script,
+			'entity',
+			'failedOrder',
+			'--repository',
+		], {
 			cwd: root,
-			env: { ...process.env, PATH: `${resolve(root, 'bin')}:${process.env.PATH}` },
+			env: { ...process.env, PATH: path },
 		})).rejects.toThrow()
 
+		// The failed transaction must restore the original manifest.
 		expect(await readFile(resolve(root, 'package.json'), 'utf8')).toBe(manifest)
-		await expect(access(resolve(root, 'src/entities/failedOrder'))).rejects.toThrow()
+
+		// The generated slice must not survive the failed installation.
+		await expect(
+			access(resolve(root, 'src/entities/failedOrder')),
+		).rejects.toThrow()
+	}
+	finally {
+		// Remove the isolated fixture regardless of the test outcome.
+		await rm(root, { force: true, recursive: true })
+	}
+}, 15_000)
+
+it('keeps concurrent writes to the same slice consistent', async () => {
+	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-concurrent-'))
+
+	try {
+		const results = await Promise.allSettled([
+			execute(process.execPath, [
+				script,
+				'entity',
+				'concurrentOrder',
+				'--no-install',
+			], { cwd: root }),
+
+			execute(process.execPath, [
+				script,
+				'entity',
+				'concurrentOrder',
+				'--no-install',
+			], { cwd: root }),
+		])
+		// Exactly one process should create the slice successfully.
+		const successes = results.filter(result => result.status === 'fulfilled')
+		expect(successes).toHaveLength(1)
+
+		// The other process must fail rather than silently succeeding.
+		const failures = results.filter(result => result.status === 'rejected')
+		expect(failures).toHaveLength(1)
+
+		// The successful process must leave the complete slice behind.
+		const target = resolve(root, 'src/entities/concurrentOrder')
+		await expect(
+			access(resolve(target, 'model/concurrentOrder.model.ts')),
+		).resolves.toBeUndefined()
+		await expect(
+			access(resolve(target, 'concurrentOrder.public.ts')),
+		).resolves.toBeUndefined()
+		// No temporary generator directory should remain.
+		const parent = resolve(root, 'src/entities')
+		const entries = await import('node:fs/promises').then(
+			({ readdir }) => readdir(parent),
+		)
+
+		expect(entries.filter(name => name.endsWith('.tmp'))).toEqual([])
 	}
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 15_000)
 
 it('installs JST-tested dependency versions instead of floating latest releases', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-versions-'))
 	try {
-		await mkdir(resolve(root, 'bin'))
-		await writeFile(resolve(root, 'package.json'), '{"packageManager":"npm@11.6.2"}\n')
-		await writeFile(resolve(root, 'bin/npm'), '#!/bin/sh\nprintf "%s\\n" "$*" >> npm-calls.txt\n')
-		await chmod(resolve(root, 'bin/npm'), 0o755)
+		const bin = resolve(root, 'bin')
 
-		await execute(process.execPath, [script, 'feature', 'reviewQueue', '--stateful', '--tests', '--yes'], {
-			cwd: root,
-			env: { ...process.env, PATH: `${resolve(root, 'bin')}:${process.env.PATH}` },
-		})
+		await mkdir(bin)
+		await writeFile(resolve(root, 'package.json'), '{"packageManager":"npm@11.6.2"}\n')
+
+		// Use a platform-specific shim so the test never launches real npm.
+		if (process.platform === 'win32') {
+			await writeFile(
+				resolve(bin, 'npm.cmd'),
+				'@echo off\r\necho %*>>npm-calls.txt\r\nexit /b 0\r\n',
+			)
+		}
+		else {
+			await writeFile(
+				resolve(bin, 'npm'),
+				'#!/bin/sh\nprintf "%s\\n" "$*" >> npm-calls.txt\n',
+			)
+			await chmod(resolve(bin, 'npm'), 0o755)
+		}
+
+		await execute(
+			process.execPath,
+			[script, 'feature', 'reviewQueue', '--stateful', '--tests', '--yes'],
+			{
+				cwd: root,
+				env: {
+					...process.env,
+					PATH: [bin, process.env.PATH]
+						.filter(Boolean)
+						.join(process.platform === 'win32' ? ';' : ':'),
+				},
+			},
+		)
 
 		const calls = await readFile(resolve(root, 'npm-calls.txt'), 'utf8')
 		expect(calls).toContain('@reatom/core@1001.3.0')

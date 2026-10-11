@@ -73,6 +73,7 @@ if (values['dry-run']) {
 
 const temporary = resolve(dirname(target), `.${basename(target)}-${process.pid}.tmp`)
 const projectFiles = await snapshotProjectFiles(root)
+let targetCommitted = false
 try {
 	for (const [relativePath, source] of plan.files) {
 		const path = resolve(temporary, relativePath)
@@ -80,6 +81,8 @@ try {
 		await writeFile(path, source)
 	}
 	await rename(temporary, target)
+	targetCommitted = true
+
 	if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
 		await installDependencies(root, plan)
 	}
@@ -94,8 +97,13 @@ try {
 }
 
 catch (error) {
+	// Always clean up this process's temporary directory.
 	await rm(temporary, { force: true, recursive: true })
-	await rm(target, { force: true, recursive: true })
+	// Remove the target only if this transaction committed it.
+	if (targetCommitted) {
+		await rm(target, { force: true, recursive: true })
+	}
+	// Restore project files after a failed transaction.
 	await restoreProjectFiles(projectFiles)
 	throw error
 }
