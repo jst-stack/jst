@@ -6,6 +6,9 @@ This walkthrough takes a clean JST application from generation to a release-read
 
 ```bash
 npm create jst@latest order-board
+# or, with pnpm
+pnpm create jst@latest order-board
+
 cd order-board
 npm run validate
 ```
