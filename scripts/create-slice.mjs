@@ -70,42 +70,108 @@ if (values['dry-run']) {
 	process.stdout.write(`${JSON.stringify({ dependencies: plan.dependencies, devDependencies: plan.devDependencies, files: [...plan.files.keys()] }, null, 2)}\n`)
 	process.exit(0)
 }
-
 const temporary = resolve(dirname(target), `.${basename(target)}-${process.pid}.tmp`)
-const projectFiles = await snapshotProjectFiles(root)
+const lockDirectory = resolve(root, '.jst-create-slice.lock')
+
 let targetCommitted = false
+let lockAcquired = false
+
 try {
-	for (const [relativePath, source] of plan.files) {
-		const path = resolve(temporary, relativePath)
-		await mkdir(dirname(path), { recursive: true })
-		await writeFile(path, source)
-	}
-	await rename(temporary, target)
-	targetCommitted = true
+	await acquireTransactionLock(lockDirectory)
+	lockAcquired = true
 
-	if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
-		await installDependencies(root, plan)
+	// Snapshot only after acquiring the lock.
+	const projectFiles = await snapshotProjectFiles(root)
+
+	try {
+		// Check again because another process may have created the target.
+		await assertMissing(target)
+
+		for (const [relativePath, source] of plan.files) {
+			const path = resolve(temporary, relativePath)
+			await mkdir(dirname(path), { recursive: true })
+			await writeFile(path, source)
+		}
+
+		await rename(temporary, target)
+		targetCommitted = true
+
+		if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
+			await installDependencies(root, plan)
+		}
+
+		process.stdout.write(`${[
+			`Created ${kind} slice at src/${layer}/${name}.`,
+			`Next: compose @/${layer}/${name}/${name}${policy.imports.publicApiSuffix} from an owning page or higher layer.`,
+			'Knip intentionally keeps the quality gate red until the new slice is reachable.',
+			...(plan.dependencies.length || plan.devDependencies.length
+				? ['JST installed tested dependency versions. Extend the generated imports and API; do not replace or inspect package internals.']
+				: []),
+		].join('\n')}\n`)
 	}
-	process.stdout.write(`${[
-		`Created ${kind} slice at src/${layer}/${name}.`,
-		`Next: compose @/${layer}/${name}/${name}${policy.imports.publicApiSuffix} from an owning page or higher layer.`,
-		'Knip intentionally keeps the quality gate red until the new slice is reachable.',
-		...(plan.dependencies.length || plan.devDependencies.length
-			? ['JST installed tested dependency versions. Extend the generated imports and API; do not replace or inspect package internals.']
-			: []),
-	].join('\n')}\n`)
+	catch (error) {
+		const cleanupErrors = []
+
+		try {
+			await rm(temporary, { force: true, recursive: true })
+		}
+		catch (cleanupError) {
+			cleanupErrors.push(cleanupError)
+		}
+
+		if (targetCommitted) {
+			try {
+				await rm(target, { force: true, recursive: true })
+			}
+			catch (cleanupError) {
+				cleanupErrors.push(cleanupError)
+			}
+		}
+
+		try {
+			await restoreProjectFiles(projectFiles)
+		}
+		catch (cleanupError) {
+			cleanupErrors.push(cleanupError)
+		}
+
+		if (cleanupErrors.length) {
+			throw new AggregateError(
+				[error, ...cleanupErrors],
+				'Slice generation failed and one or more rollback operations also failed.',
+			)
+		}
+
+		throw error
+	}
 }
-
-catch (error) {
-	// Always clean up this process's temporary directory.
-	await rm(temporary, { force: true, recursive: true })
-	// Remove the target only if this transaction committed it.
-	if (targetCommitted) {
-		await rm(target, { force: true, recursive: true })
+finally {
+	if (lockAcquired) {
+		await rm(lockDirectory, { force: true, recursive: true })
 	}
-	// Restore project files after a failed transaction.
-	await restoreProjectFiles(projectFiles)
-	throw error
+}
+async function acquireTransactionLock(lockDirectory) {
+	const deadline = Date.now() + 30_000
+
+	while (true) {
+		try {
+			await mkdir(lockDirectory)
+			return
+		}
+		catch (error) {
+			if (error?.code !== 'EEXIST') {
+				throw error
+			}
+
+			if (Date.now() >= deadline) {
+				throw new Error(
+					`Timed out waiting for the slice-generation lock: ${lockDirectory}`,
+				)
+			}
+
+			await new Promise(resolvePromise => setTimeout(resolvePromise, 50))
+		}
+	}
 }
 
 async function resolveValues(kind, values) {

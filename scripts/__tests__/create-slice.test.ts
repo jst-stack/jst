@@ -125,12 +125,23 @@ async function getKnipFailure(root: string) {
 it('rolls back source and manifests when dependency installation fails', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-rollback-'))
 	const manifest = '{"name":"rollback-probe","packageManager":"npm@11.6.2"}\n'
+	const packageLock = `${JSON.stringify({
+		name: 'rollback-probe',
+		lockfileVersion: 3,
+		packages: {},
+	}, null, 2)}\n`
+	const pnpmLock = 'lockfileVersion: \'9.0\'\nsettings:\n  autoInstallPeers: true\n'
 	const bin = resolve(root, 'bin')
 
 	try {
 		await mkdir(bin)
+		// Seed every tracked project file with user-owned content.
 		await writeFile(resolve(root, 'package.json'), manifest)
-
+		await writeFile(resolve(root, 'package-lock.json'), packageLock)
+		await writeFile(resolve(root, 'pnpm-lock.yaml'), pnpmLock)
+		// A failed install must restore both lockfiles byte-for-byte.
+		expect(await readFile(resolve(root, 'package-lock.json'), 'utf8')).toBe(packageLock)
+		expect(await readFile(resolve(root, 'pnpm-lock.yaml'), 'utf8')).toBe(pnpmLock)
 		// Use a platform-specific executable to intercept npm.
 		if (process.platform === 'win32') {
 			await writeFile(
@@ -174,6 +185,191 @@ it('rolls back source and manifests when dependency installation fails', async (
 		await rm(root, { force: true, recursive: true })
 	}
 }, 15_000)
+
+it(
+	'preserves successful manifest changes when another concurrent installation fails',
+	async () => {
+		const root = await mkdtemp(
+			resolve(tmpdir(), 'jst-manifest-transaction-'),
+		)
+		const bin = resolve(root, 'bin')
+		const helperPath = resolve(root, 'fake-npm.mjs')
+		const packagePath = resolve(root, 'package.json')
+
+		try {
+			await mkdir(bin, { recursive: true })
+
+			await writeFile(
+				packagePath,
+				`${JSON.stringify({
+					name: 'manifest-transaction-probe',
+					packageManager: 'npm@11.6.2',
+				}, null, 2)}\n`,
+			)
+
+			// Coordinate both installers so each generator snapshots the original manifest.
+			const helper = String.raw`
+import { access, readFile, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import process from 'node:process'
+
+const root = process.env.JST_TEST_ROOT
+const role = process.env.JST_TEST_ROLE
+
+async function exists(name) {
+  try {
+    await access(resolve(root, name))
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function waitFor(predicate) {
+  const deadline = Date.now() + 10000
+
+  while (!(await predicate())) {
+    if (Date.now() > deadline) {
+      process.stderr.write('Timed out waiting for the other installer.\n')
+      process.exit(24)
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+}
+
+await writeFile(resolve(root, role + '.started'), 'started')
+
+if (role === 'winner') {
+  const path = resolve(root, 'package.json')
+  const manifest = JSON.parse(await readFile(path, 'utf8'))
+
+  manifest.dependencies = {
+    ...manifest.dependencies,
+    zod: '4.6.7',
+  }
+
+  await writeFile(path, JSON.stringify(manifest, null, 2) + '\n')
+  await writeFile(resolve(root, 'winner.done'), 'done')
+} else {
+  await waitFor(() => exists('winner.done'))
+  process.exitCode = 23
+}
+`
+
+			await writeFile(helperPath, helper)
+
+			const quote = (value: string) => value.replaceAll('"', '\\"')
+			const nodePath = quote(process.execPath)
+			const scriptPath = quote(helperPath)
+
+			if (process.platform === 'win32') {
+				await writeFile(
+					resolve(bin, 'npm.cmd'),
+					`@echo off\r\n"${nodePath}" "${scriptPath}" %*\r\nexit /b %ERRORLEVEL%\r\n`,
+				)
+			}
+			else {
+				const npmPath = resolve(bin, 'npm')
+
+				await writeFile(
+					npmPath,
+					`#!/bin/sh\nexec "${nodePath}" "${scriptPath}" "$@"\n`,
+				)
+
+				await chmod(npmPath, 0o755)
+			}
+
+			const pathKey = Object.keys(process.env).find(
+				key => key.toLowerCase() === 'path',
+			) ?? 'PATH'
+
+			const envFor = (role: 'winner' | 'loser') => ({
+				...process.env,
+				[pathKey]: `${bin}${process.platform === 'win32' ? ';' : ':'}${process.env[pathKey] ?? ''}`,
+				JST_TEST_ROOT: root,
+				JST_TEST_ROLE: role,
+			})
+
+			const results = await Promise.allSettled([
+				execute(
+					process.execPath,
+					[script, 'entity', 'winnerOrder', '--repository'],
+					{
+						cwd: root,
+						env: envFor('winner'),
+						timeout: 20000,
+					},
+				),
+				execute(
+					process.execPath,
+					[script, 'entity', 'loserOrder', '--repository'],
+					{
+						cwd: root,
+						env: envFor('loser'),
+						timeout: 20000,
+					},
+				),
+			])
+
+			expect(results[0].status).toBe('fulfilled')
+			expect(results[1].status).toBe('rejected')
+			const manifest = JSON.parse(
+				await readFile(packagePath, 'utf8'),
+			) as {
+				dependencies?: Record<string, string>
+			}
+
+			expect(manifest.dependencies).toMatchObject({
+				zod: '4.6.7',
+			})
+			await expect(
+				access(resolve(root, 'src/entities/winnerOrder')),
+			).resolves.toBeUndefined()
+
+			await expect(
+				access(resolve(root, 'src/entities/loserOrder')),
+			).rejects.toMatchObject({
+				code: 'ENOENT',
+			})
+		}
+		finally {
+			await rm(root, { recursive: true, force: true })
+		}
+	},
+	25000,
+)
+
+it('preserves pre-existing target files', async () => {
+	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-existing-'))
+	const target = resolve(root, 'src/entities/protectedOrder')
+	const sentinel = resolve(target, 'user-data.txt')
+	const packagePath = resolve(root, 'package.json')
+	const manifest = `${JSON.stringify({
+		name: 'existing-target-probe',
+		packageManager: 'npm@11.6.2',
+	}, null, 2)}\n`
+
+	try {
+		await mkdir(target, { recursive: true })
+		await writeFile(sentinel, 'user-owned content\n')
+		await writeFile(packagePath, manifest)
+
+		await expect(
+			execute(
+				process.execPath,
+				[script, 'entity', 'protectedOrder', '--repository'],
+				{ cwd: root },
+			),
+		).rejects.toThrow()
+
+		expect(await readFile(sentinel, 'utf8')).toBe('user-owned content\n')
+		expect(await readFile(packagePath, 'utf8')).toBe(manifest)
+	}
+	finally {
+		await rm(root, { recursive: true, force: true })
+	}
+})
 
 it('keeps concurrent writes to the same slice consistent', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-concurrent-'))
@@ -326,6 +522,62 @@ it('plans every optional dependency through replaceable slice adapters', async (
 		expect(stdout).toContain('orderHistory.handler.ts')
 		expect(stdout).toContain('orderHistory.store.ts')
 		await expect(access(resolve(root, 'src/entities/orderHistory'))).rejects.toThrow()
+	}
+	finally {
+		await rm(root, { force: true, recursive: true })
+	}
+})
+
+it('uses pnpm for dependency installation when configured', async () => {
+	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-pnpm-'))
+	const bin = resolve(root, 'bin')
+
+	try {
+		await mkdir(bin)
+		await writeFile(
+			resolve(root, 'package.json'),
+			'{"packageManager":"pnpm@10.0.0"}\n',
+		)
+
+		if (process.platform === 'win32') {
+			await writeFile(
+				resolve(bin, 'pnpm.cmd'),
+				'@echo off\r\necho %*>>pnpm-calls.txt\r\nexit /b 0\r\n',
+			)
+		}
+		else {
+			const pnpmPath = resolve(bin, 'pnpm')
+
+			await writeFile(
+				pnpmPath,
+				'#!/bin/sh\nprintf "%s\\n" "$*" >> pnpm-calls.txt\n',
+			)
+			await chmod(pnpmPath, 0o755)
+		}
+
+		const pathKey = Object.keys(process.env).find(
+			key => key.toLowerCase() === 'path',
+		) ?? 'PATH'
+
+		await execute(
+			process.execPath,
+			[script, 'feature', 'reviewQueue', '--stateful', '--tests', '--yes'],
+			{
+				cwd: root,
+				env: {
+					...process.env,
+					[pathKey]: `${bin}${process.platform === 'win32' ? ';' : ':'}${process.env[pathKey] ?? ''}`,
+				},
+			},
+		)
+
+		const calls = await readFile(resolve(root, 'pnpm-calls.txt'), 'utf8')
+
+		expect(calls).toContain('add --ignore-workspace-root-check')
+		expect(calls).toContain('--save-dev')
+		await expect(
+			access(resolve(root, 'src/features/reviewQueue')),
+		).resolves.toBeUndefined()
 	}
 	finally {
 		await rm(root, { force: true, recursive: true })
