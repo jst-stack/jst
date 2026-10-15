@@ -21,6 +21,7 @@
 		"doctor": "react-doctor . --blocking warning --no-supply-chain --no-telemetry --yes",
 		"doctor:staged": "node scripts/react-doctor-staged.mjs",
 		"audit:production": "npm audit --omit=dev --audit-level=high",
+		"audit:development": "node scripts/audit-development.mjs",
 		"knip": "knip",
 		"test": "vitest",
 		"test:unit": "vitest run --passWithNoTests",

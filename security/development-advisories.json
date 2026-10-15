@@ -1,0 +1,10 @@
+{
+	"advisories": [
+		{
+			"id": "1240992",
+			"owner": "@jst-stack/maintainers",
+			"reason": "Transitive Stylelint glob parsing; production dependencies are audited separately and clean.",
+			"expires": "2027-01-15"
+		}
+	]
+}
