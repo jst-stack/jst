@@ -38,7 +38,7 @@
 		"jst:mcp": "jst-mcp"
 	},
 	"dependencies": {
-		"@mantine/core": "^9.6.3",
+		"@mantine/core": "^9.7.2",
 		"@mantine/hooks": "^9.5.2",
 		"@needle-di/core": "^1.2.1",
 		"@react-router/node": "^8.3.1",
