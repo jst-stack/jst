@@ -27,6 +27,8 @@ Options:
   --persistence    add an entity persistence port
   --ui             add Mantine UI
   --tests          add a colocated test
+  --msw            add an MSW handler (requires --repository)
+  --public         expose a feature or module public API
   --style <value>  use css or scss modules
   --no-install     do not install required packages
   --dry-run        print the file and dependency plan without writing
@@ -87,7 +89,7 @@ try {
 		`Created ${kind} slice at src/${layer}/${name}.`,
 		`Next: compose @/${layer}/${name}/${name}${policy.imports.publicApiSuffix} from an owning page or higher layer.`,
 		'Knip intentionally keeps the quality gate red until the new slice is reachable.',
-		...(plan.dependencies.length || plan.devDependencies.length
+		...(values.install && (plan.dependencies.length || plan.devDependencies.length)
 			? ['JST installed tested dependency versions. Extend the generated imports and API; do not replace or inspect package internals.']
 			: []),
 	].join('\n')}\n`)
@@ -221,7 +223,7 @@ function createModel(typeName) {
 }
 
 function createEntityPublicApi(typeName, name, hasRepository, stateful) {
-	return `export { create${typeName} } from './model/${name}.model'\nexport type { ${typeName} } from './model/${name}.model'\n${stateful ? `export { ${typeName}Store } from './${name}.store'\n` : ''}${hasRepository ? `export { ${name}RepositoryToken } from './repository/${name}.repository'\nexport type { ${typeName}Repository } from './repository/${name}.repository'\n` : ''}`
+	return `${stateful ? `export { ${typeName}Store } from './${name}.store'\n` : ''}export { create${typeName} } from './model/${name}.model'\nexport type { ${typeName} } from './model/${name}.model'\n${hasRepository ? `export { ${name}RepositoryToken } from './repository/${name}.repository'\nexport type { ${typeName}Repository } from './repository/${name}.repository'\n` : ''}`
 }
 
 function createComponent(componentName, name, style, stateful) {
@@ -271,7 +273,7 @@ function createTest(kind, typeName, name, hasRepository, testsUi, uiDirectory) {
 		const uiImports = testsUi ? `import { HeadlessMantineProvider } from '@mantine/core'\nimport { render, screen } from '@testing-library/react'\n` : ''
 		const uiComponentImport = testsUi ? `import { ${typeName} } from '../${uiDirectory}/${name}.component'\n` : ''
 		const uiTest = testsUi ? `\n\tit('renders the props-driven entity view', () => {\n\t\trender(<HeadlessMantineProvider env="test"><${typeName} /></HeadlessMantineProvider>)\n\t\texpect(screen.getByRole('region', { name: '${name}' })).toBeTruthy()\n\t})\n` : ''
-		return `${testsUi ? '// @vitest-environment jsdom\n\n' : ''}${uiImports}import { describe, expect, it } from 'vitest'\n${uiComponentImport}import { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from '../repository/${name}.dto'\n\ndescribe('${name} boundary', () => {\n\tit('validates and maps an external DTO', () => {\n\t\tconst dto = ${name}DtoSchema.parse({ id: 'example' })\n\t\texpect(map${typeName}Dto(dto)).toEqual({ id: 'example' })\n\t})\n\n\tit('rejects an invalid external DTO', () => {\n\t\texpect(() => ${name}DtoSchema.parse({ id: 1 })).toThrow()\n\t})\n${uiTest}})\n`
+		return `${testsUi ? '// @vitest-environment jsdom\n\n' : ''}${uiImports}import { describe, expect, it } from 'vitest'\nimport { map${typeName}Dto } from '../model/${name}.mapper'\nimport { ${name}DtoSchema } from '../repository/${name}.dto'\n${uiComponentImport}\ndescribe('${name} boundary', () => {\n\tit('validates and maps an external DTO', () => {\n\t\tconst dto = ${name}DtoSchema.parse({ id: 'example' })\n\t\texpect(map${typeName}Dto(dto)).toEqual({ id: 'example' })\n\t})\n\n\tit('rejects an invalid external DTO', () => {\n\t\texpect(() => ${name}DtoSchema.parse({ id: 1 })).toThrow()\n\t})\n${uiTest}})\n`
 	}
 	if (kind === 'entity') {
 		return `import { describe, expect, it } from 'vitest'\nimport { create${typeName} } from '../model/${name}.model'\n\ndescribe('${name} model', () => {\n\tit('creates an independent domain value', () => {\n\t\tconst source = { id: 'example' }\n\t\tconst model = create${typeName}(source)\n\t\texpect(model).toEqual(source)\n\t\texpect(model).not.toBe(source)\n\t})\n})\n`

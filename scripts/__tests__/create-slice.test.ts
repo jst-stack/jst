@@ -16,6 +16,8 @@ it('prints discoverable command help', async () => {
 	expect(stdout).toContain('Usage: npm run create:slice')
 	expect(stdout).toContain('--stateful')
 	expect(stdout).toContain('--repository')
+	expect(stdout).toContain('--msw')
+	expect(stdout).toContain('--public')
 	expect(stdout).toContain('--no-install')
 })
 
@@ -223,6 +225,35 @@ it('plans every optional dependency through replaceable slice adapters', async (
 		expect(stdout).toContain('orderHistory.handler.ts')
 		expect(stdout).toContain('orderHistory.store.ts')
 		await expect(access(resolve(root, 'src/entities/orderHistory'))).rejects.toThrow()
+	}
+	finally {
+		await rm(root, { force: true, recursive: true })
+	}
+})
+
+it('generates the complete entity option set in lint order', async () => {
+	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-complete-'))
+	try {
+		const { stdout } = await execute(process.execPath, [
+			script,
+			'entity',
+			'orderHistory',
+			'--repository',
+			'--service',
+			'--persistence',
+			'--stateful',
+			'--ui',
+			'--tests',
+			'--msw',
+			'--no-install',
+			'--yes',
+		], { cwd: root })
+
+		expect(stdout).not.toContain('installed tested dependency versions')
+		const publicApi = await readFile(resolve(root, 'src/entities/orderHistory/orderHistory.public.ts'), 'utf8')
+		expect(publicApi.indexOf('./orderHistory.store')).toBeLessThan(publicApi.indexOf('./model/orderHistory.model'))
+		const test = await readFile(resolve(root, 'src/entities/orderHistory/__tests__/orderHistory.test.tsx'), 'utf8')
+		expect(test.indexOf('../model/orderHistory.mapper')).toBeLessThan(test.indexOf('../ui/orderHistory.component'))
 	}
 	finally {
 		await rm(root, { force: true, recursive: true })
