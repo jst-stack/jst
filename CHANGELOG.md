@@ -2,7 +2,7 @@
 
 Notable changes to the JST application template are documented here.
 
-## Unreleased
+## 0.4.28
 
 - Consume the split quality and architecture enforcement through the compatibility preset.
 

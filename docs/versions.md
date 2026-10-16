@@ -4,7 +4,8 @@ The documentation at this site describes the latest supported JST release. Immut
 
 | Template | Documentation | Status |
 | --- | --- | --- |
-| `v0.4.27` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.27/docs) | Current |
+| `v0.4.28` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.28/docs) | Current |
+| `v0.4.27` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.27/docs) | Historical |
 | `v0.4.26` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.26/docs) | Historical |
 | `v0.4.25` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.25/docs) | Historical |
 | `v0.4.18` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.18/docs) | Historical |
