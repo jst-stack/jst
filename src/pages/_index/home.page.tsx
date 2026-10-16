@@ -16,7 +16,8 @@ export function HomePage() {
 					<Badge color="lime" variant="light">Project ready</Badge>
 					<Title className={styles.title} order={1}>{APP_CONFIG.name}</Title>
 					<Text className={styles.lead} size="lg">
-						Your SSR foundation, dependency boundaries, and production checks are wired. Replace this page with your first product route.
+						Your SSR foundation, dependency boundaries, and production checks are wired.
+						Replace this page with your first product route.
 					</Text>
 				</div>
 

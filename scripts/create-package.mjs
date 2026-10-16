@@ -96,19 +96,23 @@ function createDecision(name, kind) {
 
 async function registerWorkspace(root, manifestPath, manifest) {
 	const workspaces = Array.isArray(manifest.workspaces) ? manifest.workspaces : manifest.workspaces?.packages ?? []
+	const updated = { ...manifest }
 	if (!workspaces.includes('packages/*')) {
 		const packages = [...workspaces, 'packages/*']
-		manifest.workspaces = Array.isArray(manifest.workspaces) || !manifest.workspaces
+		updated.workspaces = Array.isArray(manifest.workspaces) || !manifest.workspaces
 			? packages
 			: { ...manifest.workspaces, packages }
 	}
-	await writeFile(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`)
+	await writeFile(manifestPath, `${JSON.stringify(updated, null, '\t')}\n`)
 	if (!manifest.packageManager?.startsWith('pnpm@')) {
 		return
 	}
 	const workspacePath = resolve(root, 'pnpm-workspace.yaml')
 	const source = await readFile(workspacePath, 'utf8').catch(() => 'packages:\n')
-	if (!source.includes('\'packages/*\'') && !source.includes('"packages/*"') && !/^\s*-\s+packages\/\*\s*$/mu.test(source)) {
+	const hasPackagesGlob = source.includes('\'packages/*\'')
+		|| source.includes('"packages/*"')
+		|| /^\s*-\s+packages\/\*\s*$/mu.test(source)
+	if (!hasPackagesGlob) {
 		await writeFile(workspacePath, `${source.trimEnd()}\n  - 'packages/*'\n`)
 	}
 }
@@ -139,7 +143,14 @@ async function snapshotFiles(root) {
 }
 
 async function restoreFiles(files) {
-	await Promise.all(files.map(file => file.content ? writeFile(file.path, file.content) : rm(file.path, { force: true })))
+	await Promise.all(files.map(async (file) => {
+		if (file.content) {
+			await writeFile(file.path, file.content)
+		}
+		else {
+			await rm(file.path, { force: true })
+		}
+	}))
 }
 
 function validateInput(name, positionals, options) {

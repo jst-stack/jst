@@ -10,7 +10,9 @@ const packagesRoot = resolve(root, 'packages')
 
 if (await exists(packagesRoot)) {
 	const entries = await readdir(packagesRoot, { withFileTypes: true })
-	await Promise.all(entries.filter(item => item.isDirectory()).map(entry => checkPackage(resolve(packagesRoot, entry.name))))
+	await Promise.all(entries
+		.filter(item => item.isDirectory())
+		.map(entry => checkPackage(resolve(packagesRoot, entry.name))))
 }
 
 async function checkPackage(cwd) {

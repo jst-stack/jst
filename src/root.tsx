@@ -34,8 +34,7 @@ export function Layout({ children }: { children: ReactNode }) {
 				<Links />
 			</head>
 			<body>
-				{/* SVG content is compiled from repository-owned files during the Vite build. */}
-				{/* eslint-disable-next-line react/dom-no-dangerously-set-innerhtml */}
+				{/* eslint-disable-next-line react/dom-no-dangerously-set-innerhtml -- Vite injects SVG markup */}
 				<div aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgSprite }} />
 				<a className={styles.skipLink} href="#main-content">Skip to content</a>
 				{children}

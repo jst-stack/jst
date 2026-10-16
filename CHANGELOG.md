@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## Unreleased
+
+- Consume the split quality and architecture enforcement through the compatibility preset.
+
 ## 0.4.27
 
 - Validate ESLint proof reports before consuming diagnostics.

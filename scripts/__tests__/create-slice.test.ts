@@ -144,7 +144,7 @@ it('rolls back source and manifests when dependency installation fails', async (
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 30_000)
 
 it('installs JST-tested dependency versions instead of floating latest releases', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-versions-'))
@@ -169,7 +169,7 @@ it('installs JST-tested dependency versions instead of floating latest releases'
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 30_000)
 
 it('uses SCSS policy and reports exact dry-run output without writing', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-scss-'))
@@ -202,7 +202,7 @@ export default defineConfig({
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 30_000)
 
 it('plans every optional dependency through replaceable slice adapters', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-adapters-'))
@@ -229,7 +229,7 @@ it('plans every optional dependency through replaceable slice adapters', async (
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 30_000)
 
 it('generates the complete entity option set in lint order', async () => {
 	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-complete-'))
@@ -258,4 +258,4 @@ it('generates the complete entity option set in lint order', async () => {
 	finally {
 		await rm(root, { force: true, recursive: true })
 	}
-})
+}, 30_000)

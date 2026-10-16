@@ -31,7 +31,14 @@ export default antfu(
 			html: true,
 			css: true,
 		},
-		ignores: ['.react-router/**', 'build/**', 'coverage/**', 'playwright-report/**', 'showcase/**', 'test-results/**'],
+		ignores: [
+			'.react-router/**',
+			'build/**',
+			'coverage/**',
+			'playwright-report/**',
+			'showcase/**',
+			'test-results/**',
+		],
 		rules: {
 			'no-console': ['error', { allow: ['log', 'error'] }],
 		},
@@ -48,4 +55,19 @@ export default antfu(
 		},
 	},
 	...jst.createConfig(policy),
+	{
+		files: ['scripts/**/*.{js,mjs,ts}', 'scripts/**/__tests__/**/*.ts', 'e2e/**/*.ts'],
+		rules: {
+			// Generators and integration tests embed complete source fixtures
+			// that must remain byte-exact.
+			'style/max-len': ['error', {
+				code: 120,
+				ignoreRegExpLiterals: true,
+				ignoreStrings: true,
+				ignoreTemplateLiterals: true,
+				ignoreUrls: true,
+				tabWidth: 4,
+			}],
+		},
+	},
 )

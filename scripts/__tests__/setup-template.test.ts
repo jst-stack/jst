@@ -49,74 +49,105 @@ it('creates a configured clean product', async () => {
 	const { fixtureRoot, temporaryRoot } = await createFixture('clean')
 
 	try {
-		await runSetup(fixtureRoot, [
-			'--yes',
-			'--name',
-			'field-notes',
-			'--title',
-			'Field Notes',
-			'--description',
-			'Your team\'s private notes.',
-			'--lang',
-			'uk-UA',
-			'--color-scheme',
-			'auto',
-			'--primary-color',
-			'violet',
-		])
-
-		const packageJson = await readPackageJson(fixtureRoot)
-		const config = await readFile(resolve(fixtureRoot, 'src/shared/app.config.ts'), 'utf8')
-		const route = await readFile(resolve(fixtureRoot, 'src/pages/_index/route.tsx'), 'utf8')
-
-		expect(packageJson.name).toBe('field-notes')
-		expect(packageJson.engines.node).toBe('>=24.15.0 <25')
-		expect(packageJson.scripts).not.toHaveProperty('template:setup')
-		expect(packageJson.scripts.doctor).toContain('react-doctor')
-		expect(await readFile(resolve(fixtureRoot, '.husky/pre-commit'), 'utf8'))
-			.toContain('npm run doctor:staged')
-		expect(packageJson.dependencies).toHaveProperty('@needle-di/core')
-		expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
-		expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
-		expect(packageJson.knip?.ignore).not.toContain('jst.config.ts')
-		expect(packageJson.knip?.ignoreDependencies).toContain('@typescript-eslint/utils')
-		expect(config).toContain('description: \'Your team\\\'s private notes.\'')
-		expect(config).toContain('language: \'uk-UA\'')
-		expect(config).toContain('name: \'Field Notes\'')
-		expect(config).toContain('primaryColor: \'violet\'')
-		const readme = await readFile(resolve(fixtureRoot, 'README.md'), 'utf8')
-		expect(readme).toContain('npm run validate')
-		expect(readme).toContain('npm run check')
-		expect(readme).toContain('npm run check:release')
-		expect(readme).toContain('docs/architecture.md')
-		expect(readme).toContain('skills/frontend-architecture/SKILL.md')
-		expect(await readFile(resolve(fixtureRoot, 'src/shared/di/serviceLocator.context.ts'), 'utf8'))
-			.toContain('export const useService')
-		expect(await readFile(resolve(fixtureRoot, 'src/shared/lib/react.lib.ts'), 'utf8'))
-			.toContain('export function createDi')
-		expect(route).toContain('import { HomePage } from \'./home.page\'')
-		expect(route).not.toContain('@mantine/core')
-		expect(await readFile(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'), 'utf8'))
-			.toContain('Project ready')
-		await expect(access(resolve(fixtureRoot, 'src/pages/_index/home.page.module.css'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/entities/README.md'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/features/README.md'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'src/widgets/README.md'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'skills/frontend-architecture/SKILL.md'))).resolves.toBeUndefined()
-		await expect(access(resolve(fixtureRoot, 'jst.compatibility.json'))).resolves.toBeUndefined()
-		for (const path of templateOnlyPaths) {
-			await expect(
-				access(resolve(fixtureRoot, path)),
-				`Expected template-only path "${path}" to be removed after setup`,
-			).rejects.toThrow()
-		}
+		await runSetup(fixtureRoot, cleanProductArguments())
+		await assertCleanProduct(fixtureRoot)
 		await runArchitectureCheck(fixtureRoot)
 	}
 	finally {
 		await rm(temporaryRoot, { force: true, recursive: true })
 	}
 }, 30_000)
+
+function cleanProductArguments(): string[] {
+	return [
+		'--yes',
+		'--name',
+		'field-notes',
+		'--title',
+		'Field Notes',
+		'--description',
+		'Your team\'s private notes.',
+		'--lang',
+		'uk-UA',
+		'--color-scheme',
+		'auto',
+		'--primary-color',
+		'violet',
+	]
+}
+
+async function assertCleanProduct(fixtureRoot: string) {
+	const packageJson = await readPackageJson(fixtureRoot)
+	const config = await readFile(resolve(fixtureRoot, 'src/shared/app.config.ts'), 'utf8')
+	const route = await readFile(resolve(fixtureRoot, 'src/pages/_index/route.tsx'), 'utf8')
+
+	assertPackageManifest(packageJson)
+	assertAppConfig(config)
+	await assertDocumentation(fixtureRoot)
+	await assertGeneratedBoundaries(fixtureRoot)
+	await assertTemplateOnlyRemoved(fixtureRoot)
+	assertRouteSurface(route)
+}
+
+function assertPackageManifest(packageJson: PackageManifest) {
+	expect(packageJson.name).toBe('field-notes')
+	expect(packageJson.engines.node).toBe('>=24.15.0 <25')
+	expect(packageJson.scripts).not.toHaveProperty('template:setup')
+	expect(packageJson.scripts.doctor).toContain('react-doctor')
+	expect(packageJson.dependencies).toHaveProperty('@needle-di/core')
+	expect(packageJson.knip?.ignore).toContain('src/shared/lib/react.lib.ts')
+	expect(packageJson.knip?.ignore).toContain('src/shared/ui/svgIcon.component.tsx')
+	expect(packageJson.knip?.ignore).not.toContain('jst.config.ts')
+	expect(packageJson.knip?.ignoreDependencies).toContain('@typescript-eslint/utils')
+}
+
+function assertAppConfig(config: string) {
+	expect(config).toContain('description: \'Your team\\\'s private notes.\'')
+	expect(config).toContain('language: \'uk-UA\'')
+	expect(config).toContain('name: \'Field Notes\'')
+	expect(config).toContain('primaryColor: \'violet\'')
+}
+
+async function assertDocumentation(fixtureRoot: string) {
+	const readme = await readFile(resolve(fixtureRoot, 'README.md'), 'utf8')
+	expect(readme).toContain('npm run validate')
+	expect(readme).toContain('npm run check')
+	expect(readme).toContain('npm run check:release')
+	expect(readme).toContain('docs/architecture.md')
+	expect(readme).toContain('skills/frontend-architecture/SKILL.md')
+	expect(await readFile(resolve(fixtureRoot, '.husky/pre-commit'), 'utf8'))
+		.toContain('npm run doctor:staged')
+}
+
+async function assertGeneratedBoundaries(fixtureRoot: string) {
+	expect(await readFile(resolve(fixtureRoot, 'src/shared/di/serviceLocator.context.ts'), 'utf8'))
+		.toContain('export const useService')
+	expect(await readFile(resolve(fixtureRoot, 'src/shared/lib/react.lib.ts'), 'utf8'))
+		.toContain('export function createDi')
+	expect(await readFile(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'), 'utf8'))
+		.toContain('Project ready')
+	await expect(access(resolve(fixtureRoot, 'src/pages/_index/home.page.module.css'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'src/pages/_index/home.page.tsx'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'src/entities/README.md'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'src/features/README.md'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'src/widgets/README.md'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'skills/frontend-architecture/SKILL.md'))).resolves.toBeUndefined()
+	await expect(access(resolve(fixtureRoot, 'jst.compatibility.json'))).resolves.toBeUndefined()
+}
+
+async function assertTemplateOnlyRemoved(fixtureRoot: string) {
+	for (const path of templateOnlyPaths) {
+		await expect(
+			access(resolve(fixtureRoot, path)),
+			`Expected template-only path "${path}" to be removed after setup`,
+		).rejects.toThrow()
+	}
+}
+
+function assertRouteSurface(route: string) {
+	expect(route).toContain('import { HomePage } from \'./home.page\'')
+	expect(route).not.toContain('@mantine/core')
+}
 
 it('configures SCSS Modules consistently', async () => {
 	const { fixtureRoot, temporaryRoot } = await createFixture('scss')
@@ -174,12 +205,14 @@ async function runArchitectureCheck(fixtureRoot: string) {
 }
 
 async function readPackageJson(fixtureRoot: string) {
-	return JSON.parse(await readFile(resolve(fixtureRoot, 'package.json'), 'utf8')) as {
-		name: string
-		scripts: Record<string, string>
-		dependencies: Record<string, string>
-		devDependencies: Record<string, string>
-		engines: { node: string }
-		knip?: { ignore: string[], ignoreDependencies?: string[] }
-	}
+	return JSON.parse(await readFile(resolve(fixtureRoot, 'package.json'), 'utf8')) as PackageManifest
+}
+
+interface PackageManifest {
+	name: string
+	scripts: Record<string, string>
+	dependencies: Record<string, string>
+	devDependencies: Record<string, string>
+	engines: { node: string }
+	knip?: { ignore: string[], ignoreDependencies?: string[] }
 }
