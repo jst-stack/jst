@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.29
+
+- Remove the template-only option module from generated projects so `npm run check` stays green.
+
 ## 0.4.28
 
 - Consume the split quality and architecture enforcement through the compatibility preset.

@@ -39,6 +39,7 @@ const templateOnlyPaths = [
 	'docs/versions.md',
 	'jst.template.json',
 	'scripts/__tests__',
+	'scripts/lib/template-options.mjs',
 	'scripts/prepare-compatibility-release.d.mts',
 	'scripts/prepare-compatibility-release.mjs',
 	'scripts/setup-template.mjs',
