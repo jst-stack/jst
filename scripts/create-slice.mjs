@@ -77,6 +77,19 @@ if (values['dry-run']) {
 
 const temporary = resolve(dirname(target), `.${basename(target)}-${process.pid}.tmp`)
 const projectFiles = await snapshotProjectFiles(root)
+let movedToTarget = false
+const rollback = async () => {
+	await rm(temporary, { force: true, recursive: true })
+	if (movedToTarget) {
+		await rm(target, { force: true, recursive: true })
+	}
+	await restoreProjectFiles(projectFiles)
+}
+const onSignal = (signal) => {
+	rollback().catch(() => {}).finally(() => process.exit(signal === 'SIGINT' ? 130 : 143))
+}
+process.once('SIGINT', onSignal)
+process.once('SIGTERM', onSignal)
 try {
 	for (const [relativePath, source] of plan.files) {
 		const path = resolve(temporary, relativePath)
@@ -84,6 +97,7 @@ try {
 		await writeFile(path, source)
 	}
 	await rename(temporary, target)
+	movedToTarget = true
 	if (values.install && (plan.dependencies.length || plan.devDependencies.length)) {
 		await installDependencies(root, plan)
 	}
@@ -98,10 +112,18 @@ try {
 }
 
 catch (error) {
-	await rm(temporary, { force: true, recursive: true })
-	await rm(target, { force: true, recursive: true })
-	await restoreProjectFiles(projectFiles)
+	try {
+		await rollback()
+	}
+	catch (rollbackError) {
+		error.cause = rollbackError
+	}
 	throw error
+}
+
+finally {
+	process.off('SIGINT', onSignal)
+	process.off('SIGTERM', onSignal)
 }
 
 async function readPolicy(root) {
