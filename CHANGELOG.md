@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.30
+
+- Roll slice generation back cleanly on interruption and reject concurrent generator writes.
+
 ## 0.4.29
 
 - Remove the template-only option module from generated projects so `npm run check` stays green.

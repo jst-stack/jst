@@ -7,16 +7,20 @@ export async function prepareCompatibilityRelease(root, input) {
 	validateInput(input)
 	const compatibilityPath = resolve(root, 'jst.compatibility.json')
 	const packagePath = resolve(root, 'package.json')
+	const templatePath = resolve(root, 'jst.template.json')
 	const compatibility = JSON.parse(await readFile(compatibilityPath, 'utf8'))
 	const manifest = JSON.parse(await readFile(packagePath, 'utf8'))
+	const template = JSON.parse(await readFile(templatePath, 'utf8'))
 	const previousVersion = compatibility.template.version
 
 	compatibility.template = { releaseTag: `v${input.templateVersion}`, version: input.templateVersion }
 	compatibility.packages['@jst-stack/eslint-plugin'] = compatibleMinorRange(input.pluginVersion)
 	manifest.devDependencies['@jst-stack/eslint-plugin'] = `^${input.pluginVersion}`
+	template.templateVersion = input.templateVersion
 
 	await writeJson(compatibilityPath, compatibility)
 	await writeJson(packagePath, manifest)
+	await writeJson(templatePath, template)
 	await updateCompatibilityGuide(root, compatibility)
 	await updateVersions(root, input.templateVersion, previousVersion)
 	await updateChangelog(root, input.templateVersion, input.summary)

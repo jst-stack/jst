@@ -12,7 +12,9 @@ describe('prepare compatibility release', () => {
 
 		const compatibility = JSON.parse(await readFile(resolve(root, 'jst.compatibility.json'), 'utf8')) as { packages: Record<string, string>, template: { releaseTag: string, version: string } }
 		const manifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')) as { devDependencies: Record<string, string> }
+		const template = JSON.parse(await readFile(resolve(root, 'jst.template.json'), 'utf8')) as { templateVersion: string }
 		expect(compatibility.template).toEqual({ releaseTag: 'v0.4.17', version: '0.4.17' })
+		expect(template.templateVersion).toBe('0.4.17')
 		expect(compatibility.packages['@jst-stack/eslint-plugin']).toBe('>=0.4.4 <0.5.0')
 		expect(manifest.devDependencies['@jst-stack/eslint-plugin']).toBe('^0.4.4')
 		expect(await readFile(resolve(root, 'docs/compatibility.md'), 'utf8')).toContain('| `v0.4.17` |')
@@ -29,6 +31,7 @@ async function writeFixture(root: string) {
 	await mkdir(resolve(root, 'docs'))
 	await writeFile(resolve(root, 'jst.compatibility.json'), JSON.stringify({ packages: { '@jst-stack/eslint-plugin': '>=0.4.3 <0.5.0', 'create-jst': '>=0.4.0 <0.5.0' }, runtime: { node: '>=24.15.0 <25' }, template: { releaseTag: 'v0.4.16', version: '0.4.16' } }))
 	await writeFile(resolve(root, 'package.json'), JSON.stringify({ devDependencies: { '@jst-stack/eslint-plugin': '^0.4.3' } }))
+	await writeFile(resolve(root, 'jst.template.json'), JSON.stringify({ schemaVersion: 1, templateVersion: '0.4.16' }))
 	await writeFile(resolve(root, 'CHANGELOG.md'), '# Changelog\n\nNotable changes to JST.\n\n## 0.4.16\n')
 	await writeFile(resolve(root, 'docs/compatibility.md'), '| Template | create-jst | ESLint plugin | Node | Package managers |\n| --- | --- | --- | --- | --- |\n| `v0.4.16` | `>=0.4.0 <0.5.0` | `>=0.4.3 <0.5.0` | `>=24.15.0 <25` | npm 11, pnpm 10 |\n')
 	await writeFile(resolve(root, 'docs/versions.md'), '| Template | Documentation | Status |\n| --- | --- | --- |\n| `v0.4.16` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.16/docs) | Current |\n')
