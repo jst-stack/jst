@@ -143,7 +143,9 @@ async function readPolicy(root) {
 }
 
 async function installDependencies(root, plan) {
-	const manifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'))
+	const manifestPath = resolve(root, 'package.json')
+	const source = await readFile(manifestPath, 'utf8')
+	const manifest = JSON.parse(source)
 	const packageManager = manifest.packageManager?.startsWith('pnpm@') ? 'pnpm' : 'npm'
 	const install = packageManager === 'pnpm'
 		? ['add', '--ignore-workspace-root-check']
@@ -157,6 +159,9 @@ async function installDependencies(root, plan) {
 	if (packageManager === 'npm' && plan.dependencies.length && plan.devDependencies.length) {
 		await run(packageManager, ['install', '--ignore-scripts'], root)
 	}
+	const updatedManifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+	const indent = source.match(/\n([ \t]+)"/u)?.[1]
+	await writeFile(manifestPath, `${JSON.stringify(updatedManifest, null, indent)}${source.endsWith('\n') ? '\n' : ''}`)
 }
 
 function toDependencySpec(name) {
