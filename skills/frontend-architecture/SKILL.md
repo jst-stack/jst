@@ -103,6 +103,10 @@ Create slices with `npm run create:slice -- <entity|feature|module|widget> <lowe
 
 Run `npm run create:slice -- entity <name> --repository --tests`. Validate the DTO at the adapter, map it to the domain model, keep the repository port beside its consumer, bind the adapter in its provider, and expose only the public API.
 
+### mock-http-ssr
+
+For an SSR demo or local runtime mock, bind an in-memory repository adapter through the existing provider/composition root. Keep the same repository port used by the real HTTP adapter so the switch is configuration-only. Use generated MSW handlers for HTTP-boundary tests; do not install a browser service worker into the SSR server or production bundle.
+
 ### persistence-entity
 
 Run `npm run create:slice -- entity <name> --persistence --tests`. Keep storage behind a narrow consumer-owned port, validate persisted input, implement the effect in an adapter, and bind it at the composition root; UI never sees storage.
