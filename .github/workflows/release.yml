@@ -2,7 +2,12 @@ name: Release template
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -10,7 +15,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 5
     permissions:
       artifact-metadata: write
       attestations: write
@@ -18,39 +23,49 @@ jobs:
       id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
-      HUSKY: 0
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - run: npm install --global npm@$(node -p "require('./package.json').packageManager.split('@')[1]")
-
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run check:release
-        env:
-          PLAYWRIGHT_FULL_MATRIX: '1'
-      - name: Create template archive
-        id: archive
+      - name: Resolve patch release
+        id: release
         run: |
-          archive="jst-${GITHUB_REF_NAME}.tar.gz"
-          git archive --format=tar.gz --prefix="jst-${GITHUB_REF_NAME}/" --output "$archive" "$GITHUB_SHA"
+          tag=$(git tag --points-at "$GITHUB_SHA" --list 'v[0-9]*' --sort=-v:refname | head -n 1)
+          if [ -z "$tag" ]; then
+            latest=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n 1)
+            if [[ ! "$latest" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Cannot derive a patch release from '$latest'" >&2
+              exit 1
+            fi
+            tag="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create template archive
+        if: ${{ steps.release.outputs.published != 'true' }}
+        id: archive
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          archive="jst-${RELEASE_TAG}.tar.gz"
+          git archive --format=tar.gz --prefix="jst-${RELEASE_TAG}/" --output "$archive" "$GITHUB_SHA"
           echo "path=$archive" >> "$GITHUB_OUTPUT"
       - name: Attest template archive
+        if: ${{ steps.release.outputs.published != 'true' }}
         id: attest
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: ${{ steps.archive.outputs.path }}
       - name: Create signed release
+        if: ${{ steps.release.outputs.published != 'true' }}
         env:
           ARCHIVE: ${{ steps.archive.outputs.path }}
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
           cp "$BUNDLE" "${ARCHIVE}.sigstore.json"
-          gh release create "$GITHUB_REF_NAME" "$ARCHIVE" "${ARCHIVE}.sigstore.json" --generate-notes --verify-tag
+          gh release create "$RELEASE_TAG" "$ARCHIVE" "${ARCHIVE}.sigstore.json" --target "$GITHUB_SHA" --generate-notes
