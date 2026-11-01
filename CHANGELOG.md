@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.31
+
+- Adds signed release archives and strengthens supply-chain security metadata.
+
 ## 0.4.30
 
 - Roll slice generation back cleanly on interruption and reject concurrent generator writes.

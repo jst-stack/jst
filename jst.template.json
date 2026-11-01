@@ -1,9 +1,31 @@
 {
 	"schemaVersion": 1,
-	"templateVersion": "0.4.30",
+	"templateVersion": "0.4.31",
 	"options": {
-		"colorSchemes": ["light", "dark", "auto"],
-		"primaryColors": ["dark", "gray", "red", "pink", "grape", "violet", "indigo", "blue", "cyan", "teal", "green", "lime", "yellow", "orange"],
-		"styles": ["css", "scss"]
+		"colorSchemes": [
+			"light",
+			"dark",
+			"auto"
+		],
+		"primaryColors": [
+			"dark",
+			"gray",
+			"red",
+			"pink",
+			"grape",
+			"violet",
+			"indigo",
+			"blue",
+			"cyan",
+			"teal",
+			"green",
+			"lime",
+			"yellow",
+			"orange"
+		],
+		"styles": [
+			"css",
+			"scss"
+		]
 	}
 }
