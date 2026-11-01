@@ -1,3 +1,10 @@
 {
-	"advisories": []
+	"advisories": [
+		{
+			"id": "1244012",
+			"owner": "@jst-stack/maintainers",
+			"reason": "Transitive glob parser used only by trusted lint and build configuration; production bundles exclude it.",
+			"expires": "2027-01-15"
+		}
+	]
 }

@@ -15,7 +15,7 @@ const actual = new Set(Object.values(report.vulnerabilities ?? {})
 const today = new Date().toISOString().slice(0, 10)
 const allowed = new Map(policy.advisories.map(advisory => [advisory.id, advisory]))
 const unexpected = [...actual].filter(id => !allowed.has(id))
-const expired = [...actual].filter(id => allowed.get(id).expires < today)
+const expired = [...actual].filter(id => allowed.has(id) && allowed.get(id).expires < today)
 const stale = [...allowed.keys()].filter(id => !actual.has(id))
 if (unexpected.length || expired.length || stale.length) {
 	throw new Error(`Development advisory policy mismatch. Unexpected: ${unexpected.join(', ') || 'none'}; expired: ${expired.join(', ') || 'none'}; stale: ${stale.join(', ') || 'none'}.`)
