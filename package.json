@@ -54,7 +54,7 @@
 		"@axe-core/playwright": "^4.13.0",
 		"@eslint-react/eslint-plugin": "5.28.8",
 		"@jst-stack/eslint-plugin": "^0.5.3",
-		"@jst-stack/mcp": "0.1.1",
+		"@jst-stack/mcp": "0.1.4",
 		"@playwright/test": "^1.63.0",
 		"@react-router/dev": "^8.5.0",
 		"@react-router/fs-routes": "^8.5.0",
