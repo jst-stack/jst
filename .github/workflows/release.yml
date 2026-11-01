@@ -12,7 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
+      artifact-metadata: write
+      attestations: write
       contents: write
+      id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
       HUSKY: 0
@@ -33,4 +36,21 @@ jobs:
       - run: npm run check:release
         env:
           PLAYWRIGHT_FULL_MATRIX: '1'
-      - run: gh release create "${GITHUB_REF_NAME}" --generate-notes --verify-tag
+      - name: Create template archive
+        id: archive
+        run: |
+          archive="jst-${GITHUB_REF_NAME}.tar.gz"
+          git archive --format=tar.gz --prefix="jst-${GITHUB_REF_NAME}/" --output "$archive" "$GITHUB_SHA"
+          echo "path=$archive" >> "$GITHUB_OUTPUT"
+      - name: Attest template archive
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.archive.outputs.path }}
+      - name: Create signed release
+        env:
+          ARCHIVE: ${{ steps.archive.outputs.path }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE" "${ARCHIVE}.sigstore.json"
+          gh release create "$GITHUB_REF_NAME" "$ARCHIVE" "${ARCHIVE}.sigstore.json" --generate-notes --verify-tag
