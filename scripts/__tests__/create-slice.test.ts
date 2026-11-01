@@ -191,8 +191,8 @@ export default defineConfig({
 		const { stdout } = await execute(process.execPath, [script, 'widget', 'accountMenu', '--dry-run', '--tests'], { cwd: root })
 		expect(stdout).toContain('views/accountMenu.component.module.scss')
 		expect(stdout).toContain('tests/accountMenu.spec.tsx')
-		expect(stdout).toContain('@testing-library/react')
-		expect(stdout).toContain('sass')
+		expect(stdout).toContain('@testing-library/react@16.3.3')
+		expect(stdout).toContain('sass@1.105.1')
 		await expect(access(resolve(root, 'src/blocks/accountMenu'))).rejects.toThrow()
 
 		await execute(process.execPath, [script, 'entity', 'auditLog', '--repository', '--tests', '--no-install'], { cwd: root })

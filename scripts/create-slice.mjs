@@ -71,7 +71,11 @@ const plan = createPlan({ kind, name, policy, style, values })
 
 await assertMissing(target)
 if (values['dry-run']) {
-	process.stdout.write(`${JSON.stringify({ dependencies: plan.dependencies, devDependencies: plan.devDependencies, files: [...plan.files.keys()] }, null, 2)}\n`)
+	process.stdout.write(`${JSON.stringify({
+		dependencies: plan.dependencies.map(toDependencySpec),
+		devDependencies: plan.devDependencies.map(toDependencySpec),
+		files: [...plan.files.keys()],
+	}, null, 2)}\n`)
 	process.exit(0)
 }
 
