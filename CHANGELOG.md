@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.38
+
+- Exclude the release verification helpers from generated projects.
+
 ## 0.4.37
 
 - Enforce that the compatibility manifest documents the release tag before publishing, and backfill the changelog and documentation entries that were missing for earlier releases.

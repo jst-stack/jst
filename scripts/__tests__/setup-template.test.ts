@@ -42,6 +42,8 @@ const templateOnlyPaths = [
 	'scripts/lib/template-options.mjs',
 	'scripts/prepare-compatibility-release.d.mts',
 	'scripts/prepare-compatibility-release.mjs',
+	'scripts/verify-release-tag.d.mts',
+	'scripts/verify-release-tag.mjs',
 	'scripts/setup-template.mjs',
 	'showcase',
 ]
