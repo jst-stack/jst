@@ -92,6 +92,14 @@ New to JST? Build the [first production feature](docs/getting-started.md), then 
 | `npm run proof:architecture` | Reproduce the architecture violation and repair loop |
 | `npm run template:setup` | Configure the new product |
 
+## Upgrading
+
+The template ships as a tagged release. `create-jst` pins one of those tags, and `jst.compatibility.json` inside the release declares the Node.js range, the supported package manager majors, and the package ranges that tag was verified against.
+
+- New projects: `npx create-jst@latest` pins the current tag, and the released canary checks that the tag manifest still matches the published packages.
+- Existing projects: `npx --package=create-jst jst migrate --from 0.3.0 --to 0.4.0 --dry-run` previews the rewrite before anything is written. The command refuses unsupported version paths and customized sources, and restores the tree when the project quality gate fails ([Migrations](docs/migrations.md)).
+- What changed: [CHANGELOG.md](CHANGELOG.md) lists behaviour changes per release, [docs/versions.md](docs/versions.md) maps every tag to its runtime and package ranges, and [docs/compatibility.md](docs/compatibility.md) explains each manifest field.
+
 ## Project policy
 
 - [Compatibility](docs/compatibility.md)
