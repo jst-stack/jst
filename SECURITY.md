@@ -15,3 +15,7 @@ Security fixes target the latest commit on `main`. Applications created from thi
 ## Dependency policy
 
 `npm run check:release` blocks high-severity production dependency advisories. Development-only tools are reviewed separately because npm may report advisories in fixed-input linters and test runners before an upstream release exists; they must never be mistaken for a clean production audit. Critical toolchain advisories are overridden to patched transitive versions only when the existing public API remains compatible and the complete quality gate passes.
+
+The development review is recorded in `security/development-advisories.json` and enforced by `npm run audit:development`. The ledger is keyed by package, not by advisory id, because npm reissues advisory ids for the same package while the review decision stays unchanged; a reviewer's decision therefore survives registry refreshes and dependency bumps on its own. The gate fails when a waived package is also reported by `npm audit --omit=dev`, so the ledger can never launder a production advisory, and when a waiver passes its `expires` date.
+
+Reviewers run `npm run audit:development:sync` to record the packages that the current lockfile reports as development-only, and `npm run audit:development:sync -- --review` to renew expiring waivers for another 90 days, then replace the generated `reason` with the actual decision. The script refuses to record a waiver for anything that reaches the production tree.
