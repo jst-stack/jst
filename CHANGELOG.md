@@ -2,6 +2,10 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.40
+
+- Align npm overrides with direct dependencies so generated slices install without EOVERRIDE.
+
 ## 0.4.39
 
 - Document the upgrade path from a pinned tag to the next release.
