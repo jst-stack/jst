@@ -97,6 +97,17 @@ Run Reatom behavior probes through Vitest, not standalone `node` scripts: its sc
 
 Create slices with `npm run create:slice -- <entity|feature|module|widget> <lowerCamelName>`. Extract a proven boundary with `npm run create:package -- <lowerCamelName>`; the generated package must keep one public export, declared dependencies, an acyclic workspace graph, and a reviewed extraction ADR. Source files follow `<lowerCamelName>.<role>.ts(x)` and the role directories enforced by ESLint. Do not disable architecture, naming, effect-boundary, complexity, or size rules inline; split the responsibility or move it to the reported boundary.
 
+## Quality budget
+
+`@jst-stack/eslint-plugin` enforces these limits through `npm run check`; split the responsibility instead of adding inline disables:
+
+- Files ≤ 250 lines; functions ≤ 80 lines; nesting depth ≤ 3; cyclomatic complexity ≤ 12; ≤ 4 parameters.
+- One public export per slice/package through its `<name>.public.ts`; ≤ 30 public exports per module.
+- Effects (fetch, storage, timers, navigation) live only in adapters under the owning slice, never in components, stores, or domain models.
+- `localStorage`/`sessionStorage` are touched only inside storage adapters.
+- Reatom state packets (atoms, actions, pending/optimistic state) live only in the store; entries observe the store and views render props.
+- UI components receive props only and never read the DI container, router params, or global state directly.
+
 ## Recipes
 
 ### http-entity
