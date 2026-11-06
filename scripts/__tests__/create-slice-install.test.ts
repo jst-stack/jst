@@ -40,3 +40,44 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')
 		await rm(root, { force: true, recursive: true })
 	}
 }, 30_000)
+it('aligns npm overrides with direct dependencies to avoid EOVERRIDE', async () => {
+	const root = await mkdtemp(resolve(tmpdir(), 'jst-slice-override-'))
+	try {
+		await mkdir(resolve(root, 'bin'))
+		const manifest = `${JSON.stringify({
+			name: 'override-probe',
+			overrides: { zod: '4.6.7' },
+			packageManager: 'npm@11.6.2',
+		}, null, '\t')}\n`
+		await writeFile(resolve(root, 'package.json'), manifest)
+		await writeFile(resolve(root, 'bin/npm'), `#!/usr/bin/env node
+const fs = require('node:fs')
+const specs = process.argv.slice(2).filter((arg) => !arg.startsWith('-'))
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+const overrides = pkg.overrides || {}
+for (const spec of specs) {
+	if (overrides.zod && !String(overrides.zod).startsWith('$')) {
+		console.error('npm error code EOVERRIDE')
+		process.exit(1)
+	}
+}
+pkg.dependencies = Object.assign({}, pkg.dependencies, { zod: '4.6.7' })
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')
+`)
+		await chmod(resolve(root, 'bin/npm'), 0o755)
+
+		await execute(process.execPath, [script, 'entity', 'customer', '--repository', '--yes'], {
+			cwd: root,
+			env: { ...process.env, PATH: `${resolve(root, 'bin')}:${process.env.PATH}` },
+		})
+
+		const updated = JSON.parse(
+			await readFile(resolve(root, 'package.json'), 'utf8'),
+		) as { dependencies: Record<string, string>, overrides: Record<string, string> }
+		expect(updated.overrides.zod).toBe('$zod')
+		expect(updated.dependencies.zod).toBeDefined()
+	}
+	finally {
+		await rm(root, { force: true, recursive: true })
+	}
+}, 30_000)

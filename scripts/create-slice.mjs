@@ -146,6 +146,26 @@ async function readPolicy(root) {
 	return defineConfig(config.default)
 }
 
+async function alignOverrides(manifestPath, source, manifest, added) {
+	const overrides = manifest.overrides
+	if (!overrides || typeof overrides !== 'object') {
+		return
+	}
+	let changed = false
+	for (const name of added) {
+		const pinned = overrides[name]
+		if (pinned !== undefined && !(typeof pinned === 'string' && pinned.startsWith('$'))) {
+			overrides[name] = `$${name}`
+			changed = true
+		}
+	}
+	if (!changed) {
+		return
+	}
+	const indent = source.match(/\n([ \t]+)"/u)?.[1]
+	await writeFile(manifestPath, `${JSON.stringify(manifest, null, indent)}${source.endsWith('\n') ? '\n' : ''}`)
+}
+
 async function installDependencies(root, plan) {
 	const manifestPath = resolve(root, 'package.json')
 	const source = await readFile(manifestPath, 'utf8')
@@ -154,6 +174,7 @@ async function installDependencies(root, plan) {
 	const install = packageManager === 'pnpm'
 		? ['add', '--ignore-workspace-root-check']
 		: ['install']
+	await alignOverrides(manifestPath, source, manifest, [...plan.dependencies, ...plan.devDependencies])
 	if (plan.dependencies.length) {
 		await run(packageManager, [...install, ...plan.dependencies.map(toDependencySpec)], root)
 	}
