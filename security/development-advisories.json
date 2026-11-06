@@ -3,7 +3,7 @@
 		{
 			"package": "minimatch",
 			"owner": "@jst-stack/maintainers",
-			"reason": "Transitive glob parser used only by trusted lint and build configuration; production bundles exclude it.",
+			"reason": "Reached only through the lint and build toolchain, never from the production bundle. It cannot move to the patched major until eslint and typescript-eslint accept minimatch 11, which drops the makeRe export that eslint-plugin-import-x still imports.",
 			"expires": "2027-01-15"
 		}
 	]

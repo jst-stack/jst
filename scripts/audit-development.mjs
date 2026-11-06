@@ -1,16 +1,26 @@
 import { appendFile } from 'node:fs/promises'
 import process from 'node:process'
-import { auditPackages, classify, describePackage, readPolicy } from './development-advisories.mjs'
+import {
+	auditPackages,
+	classify,
+	describePackage,
+	exceedsLevel,
+	readPolicy,
+	readProductionLevel,
+} from './development-advisories.mjs'
 
 const RENEWAL = 'npm run audit:development:sync -- --review'
+const level = readProductionLevel()
 const classification = classify({
 	policy: await readPolicy(),
 	full: auditPackages(),
 	production: auditPackages({ omitDevelopment: true }),
 })
+const fatal = classification.production.filter(entry => exceedsLevel(entry.severity, level))
+const tolerated = classification.production.filter(entry => !exceedsLevel(entry.severity, level))
 
 const failures = [
-	...classification.production.map(entry => productionFailure(entry)),
+	...fatal.map(entry => productionFailure(entry)),
 	...classification.expired.map(waiver => expiredFailure(waiver)),
 ]
 
@@ -29,16 +39,29 @@ for (const entry of classification.unreviewed) {
 for (const waiver of classification.stale) {
 	notice(`${waiver.package} is waived but no longer reported; npm run audit:development:sync drops it.`)
 }
+// A published package cannot always lift its own dependency tree; the documented level keeps those
+// advisories visible without turning every pull request red.
+for (const entry of tolerated) {
+	notice(`${describePackage(entry)} reaches the production tree at or below ${level}; only higher severities fail.`)
+}
 
-const production = classification.production.length === 0
-	? 'clean'
-	: `${classification.production.length} package(s) - fatal`
+const production = describeProduction(fatal, tolerated)
 const summary = [
 	`production tree: ${production}`,
 	`development-only tree: ${development} package(s), ${reviewed.size} reviewed, ${unreviewed} unreviewed`,
 ]
 process.stdout.write(`Development advisory review - ${summary.join('; ')}.\n`)
 await writeStepSummary(summary)
+
+function describeProduction(fatalEntries, toleratedEntries) {
+	if (fatalEntries.length > 0) {
+		return `${fatalEntries.length} package(s) - fatal`
+	}
+	if (toleratedEntries.length > 0) {
+		return `${toleratedEntries.length} package(s) - at or below the documented level`
+	}
+	return 'clean'
+}
 
 function productionFailure(entry) {
 	return `${describePackage(entry)} reaches the production dependency tree; upgrade it instead of waiving it.`

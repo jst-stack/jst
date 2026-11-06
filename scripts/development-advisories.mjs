@@ -1,12 +1,33 @@
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import process from 'node:process'
+import { URL } from 'node:url'
 
 export const POLICY_URL = new URL('../security/development-advisories.json', import.meta.url)
 export const REVIEW_WINDOW_DAYS = 90
 export const DEFAULT_OWNER = '@jst-stack/maintainers'
 
 const SEVERITY_ORDER = ['info', 'low', 'moderate', 'high', 'critical']
+const PRODUCTION_LEVEL_FLAG = '--production-level='
+
+// Development waivers are the only waivers. A published package whose own dependency tree carries
+// an advisory cannot be waived, so it names the severities it passes on the command line: anything
+// above that level stays fatal, and everything below it is reported on every run.
+export function readProductionLevel(argv = process.argv) {
+	const flag = argv.find(value => value.startsWith(PRODUCTION_LEVEL_FLAG))
+	if (flag === undefined) {
+		return undefined
+	}
+	const level = flag.slice(PRODUCTION_LEVEL_FLAG.length)
+	if (!SEVERITY_ORDER.includes(level)) {
+		throw new Error(`Unknown production level: ${level}.`)
+	}
+	return level
+}
+
+export function exceedsLevel(severity, level) {
+	return level === undefined || SEVERITY_ORDER.indexOf(severity) > SEVERITY_ORDER.indexOf(level)
+}
 
 // Advisories are grouped by package name, never by advisory id: npm reissues advisory ids for the
 // same package, so an id-keyed ledger drifts on every registry refresh while the package, its

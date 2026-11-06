@@ -5,8 +5,10 @@ import {
 	classify,
 	DEFAULT_OWNER,
 	describePackage,
+	exceedsLevel,
 	POLICY_URL,
 	readPolicy,
+	readProductionLevel,
 	REVIEW_WINDOW_DAYS,
 } from './development-advisories.mjs'
 
@@ -20,10 +22,18 @@ const classification = classify({
 })
 
 // The ledger only ever waives what the production tree cannot reach; everything else has to be fixed.
-if (classification.production.length > 0) {
-	const reported = classification.production.map(entry => describePackage(entry)).join(', ')
+const level = readProductionLevel()
+const fatal = classification.production.filter(entry => exceedsLevel(entry.severity, level))
+const tolerated = classification.production.filter(entry => !exceedsLevel(entry.severity, level))
+if (fatal.length > 0) {
+	const reported = fatal.map(entry => describePackage(entry)).join(', ')
 	const guidance = 'Upgrade them or pin a patched transitive version.'
 	throw new Error(`Refusing to waive production advisories: ${reported}. ${guidance}`)
+}
+
+for (const entry of tolerated) {
+	process.stdout.write(`reported ${describePackage(entry)} in the production tree at or below ${level}
+`)
 }
 
 const waived = new Map(policy.waivers.map(waiver => [waiver.package, waiver]))
