@@ -4,7 +4,13 @@ The documentation at this site describes the latest supported JST release. Immut
 
 | Template | Documentation | Status |
 | --- | --- | --- |
-| `v0.4.31` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.31/docs) | Current |
+| `v0.4.37` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.37/docs) | Current |
+| `v0.4.36` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.36/docs) | Historical |
+| `v0.4.35` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.35/docs) | Historical |
+| `v0.4.34` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.34/docs) | Historical |
+| `v0.4.33` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.33/docs) | Historical |
+| `v0.4.32` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.32/docs) | Historical |
+| `v0.4.31` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.31/docs) | Historical |
 | `v0.4.30` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.30/docs) | Historical |
 | `v0.4.29` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.29/docs) | Historical |
 | `v0.4.28` | [Tagged documentation](https://github.com/jst-stack/jst/tree/v0.4.28/docs) | Historical |

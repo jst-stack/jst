@@ -2,6 +2,30 @@
 
 Notable changes to the JST application template are documented here.
 
+## 0.4.37
+
+- Enforce that the compatibility manifest documents the release tag before publishing, and backfill the changelog and documentation entries that were missing for earlier releases.
+
+## 0.4.36
+
+- Document the production advisory level in the development advisory ledger gate.
+
+## 0.4.35
+
+- Refresh development and production dependencies, including the Dependabot metadata action.
+
+## 0.4.34
+
+- Keep the development advisory review intact across Dependabot bumps.
+
+## 0.4.33
+
+- Automate template patch releases from main.
+
+## 0.4.32
+
+- Ship the hardened JST MCP integration, exact dependency specs in generated projects, safe Dependabot auto-merge, and release preparation without elevated pull-request access.
+
 ## 0.4.31
 
 - Adds signed release archives and strengthens supply-chain security metadata.

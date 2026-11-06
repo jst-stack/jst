@@ -37,7 +37,9 @@
 		"template:setup": "node scripts/setup-template.mjs",
 		"prepare": "node scripts/install-git-hooks.mjs",
 		"proof:architecture": "node scripts/prove-architecture.mjs",
-		"jst:mcp": "jst-mcp"
+		"jst:mcp": "jst-mcp",
+		"release:prepare": "node scripts/prepare-compatibility-release.mjs",
+		"release:verify": "node scripts/verify-release-tag.mjs"
 	},
 	"dependencies": {
 		"@mantine/core": "^9.7.4",
@@ -99,7 +101,8 @@
 			"scripts/prepare-compatibility-release.d.mts",
 			"showcase/**",
 			"src/shared/lib/react.lib.ts",
-			"src/shared/ui/svgIcon.component.tsx"
+			"src/shared/ui/svgIcon.component.tsx",
+			"scripts/verify-release-tag.d.mts"
 		]
 	},
 	"lint-staged": {
