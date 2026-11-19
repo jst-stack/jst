@@ -42,12 +42,12 @@
 		"release:verify": "node scripts/verify-release-tag.mjs"
 	},
 	"dependencies": {
-		"@mantine/core": "^9.7.5",
+		"@mantine/core": "^9.8.1",
 		"@mantine/hooks": "^9.5.2",
 		"@needle-di/core": "^1.2.1",
 		"@react-router/node": "^8.5.1",
 		"@react-router/serve": "^8.5.1",
-		"isbot": "^5.2.2",
+		"isbot": "^5.2.3",
 		"react": "^19.3.0",
 		"react-dom": "^19.3.0",
 		"react-router": "^8.5.1"
